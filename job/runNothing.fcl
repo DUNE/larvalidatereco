@@ -1,0 +1,35 @@
+process_name: LBNE35tNull
+
+
+
+### Define input file format
+source:
+{
+  module_type: RootInput
+}
+
+### Define output file format
+outputs:
+{
+ out1:
+ {
+   module_type: RootOutput
+   fileName:    "standard_valrec.root" #default file name, can override from command line with -o or --output
+   dataTier:    "full-reconstructed"
+ }
+
+}
+
+physics: {
+  ### Set up a chain of Producer modules
+  reco: [ ]
+
+  ### Set up the output stream
+  stream1: [ out1 ]
+
+  ### Set up the trigger paths (these are the modules that modify the event) 
+  trigger_paths: [ reco ] 
+
+  ### Set up the end paths (these are the modules that do not modify the event)
+  end_paths: [ stream1 ]
+}
