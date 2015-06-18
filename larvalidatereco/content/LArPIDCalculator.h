@@ -17,7 +17,7 @@ namespace lar_valrec{
     ///methods which actually fill the various bits of output.
     virtual void Calculate(TObject* tObjectPtr,const VarHelper& varHelper,const EventHelper& evHelper);
 
-    static void FillClusterPCA(LArPID* outputPtr,const EventHelper& evHelper);
+    //static void FillClusterPCA(LArPID* outputPtr,const EventHelper& evHelper);
 
     virtual ~LArPIDCalculator(){}
 

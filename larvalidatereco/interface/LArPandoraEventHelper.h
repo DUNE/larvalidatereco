@@ -28,6 +28,7 @@ public:
   virtual const MCParticleVector& GetMCParticles() const;
   virtual const MCTruthVector& GetMCVertices() const;
   virtual const HitVector& GetHits() const;
+  virtual const SpacePointVector& GetSpacePoints() const;
   virtual const MCTruthToMCParticles& GetTruthToParticles() const;
   virtual const MCParticlesToMCTruth& GetParticlesToTruth() const;
   virtual const MCParticlesToHits& GetMCParticleToHitAssociations() const;
@@ -41,6 +42,8 @@ public:
   virtual const HitsToClusters& GetHitsToClusters() const;
   virtual const TracksToHits& GetTracksToHits() const;
   virtual const HitsToTracks& GetHitsToTracks() const;
+  virtual const HitsToSpacePoints& GetHitsToSpacePoints() const;
+  virtual const SpacePointsToHits& GetSpacePointsToHits() const;
 
  private: 
 
@@ -55,6 +58,7 @@ public:
     PFParticleVector fPFParticles;
     ClusterVector fClusters;
     TrackVector fTracks;
+    SpacePointVector fSpacePoints;
 
     //Relationships
     MCTruthToMCParticles fTruthToParticles;
@@ -67,6 +71,8 @@ public:
     HitsToClusters fHitsToClusters;
     HitsToTracks fHitsToTracks;
     TracksToHits fTracksToHits;
+    SpacePointsToHits fSpacePointsToHits;
+    HitsToSpacePoints fHitsToSpacePoints;
 
     std::string fSimModuleName;
     std::string fRecoModuleName;
@@ -136,6 +142,18 @@ public:
 
   inline const HitsToTracks& LArPandoraEventHelper::GetHitsToTracks() const{
     return fHitsToTracks;
+  }
+
+  inline const SpacePointVector& LArPandoraEventHelper::GetSpacePoints() const{
+    return fSpacePoints;
+  }
+
+  inline const SpacePointsToHits& LArPandoraEventHelper::GetSpacePointsToHits() const{
+    return fSpacePointsToHits;
+  }
+
+  inline const HitsToSpacePoints& LArPandoraEventHelper::GetHitsToSpacePoints() const{
+    return fHitsToSpacePoints;
   }
 
 

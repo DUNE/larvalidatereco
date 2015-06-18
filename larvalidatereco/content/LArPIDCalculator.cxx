@@ -19,6 +19,25 @@ namespace lar_valrec{
   };
   static LArPID_register __LArPIDRegister;
 
-  void LArPIDCalculator::Calculate(TObject* tObjectPtr,const VarHelper& varHelper,const EventHelper& evHelper);
+  void LArPIDCalculator::Calculate(TObject* tObjectPtr,const VarHelper& varHelper,const EventHelper& evHelper){
+  LArPID* outputPtr=dynamic_cast<LArPID*>(tObjectPtr);
+  if(!outputPtr){
+    exit(1);
+  }
+  outputPtr->Clear();
+  /*
+  const TrackVector& tracks=evHelper.GetTracks();
+  const TracksToHits& tracksToHits=evHelper.GetTracksToHits();
+  const MCParticlesToHits& particlesToHits=evHelper.GetMCParticleToHitAssociations();
+  const HitsToMCParticles& hitsToParticles=evHelper.GetHitToMCParticleAssociations();
 
-  static void LArPIDCalculator::FillClusterPCA(LArPID* outputPtr,const EventHelper& evHelper);
+  FillClusterPCA(outputPtr,evHelper);
+
+  static void LArPIDCalculator::FillClusterPCA(LArPID* outputPtr,const EventHelper& evHelper){
+    const ClusterVector& clusters=evHelper.GetClusters();
+
+    for(auto cl=clusters.cbegin();cl!=clusters.cend();++cl){
+      
+  */
+  }
+}

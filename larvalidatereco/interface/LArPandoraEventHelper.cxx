@@ -21,7 +21,7 @@ namespace lar_valrec{
     fPFParticles.clear();
     fClusters.clear();
     fTracks.clear();
-
+    fSpacePoints.clear();
     //Relationships
     fMCParticlesToHits.clear();
     fHitsToMCParticles.clear();
@@ -33,7 +33,9 @@ namespace lar_valrec{
     fHitsToClusters.clear();
     fHitsToTracks.clear();
     fTracksToHits.clear();
-    
+    fSpacePointsToHits.clear();
+    fHitsToSpacePoints.clear();
+
     //Collect simulation and reconstruction objects
     lar_pandora::LArPandoraCollector::CollectMCParticles(evt, fSimModuleName, fMCParticles);
     lar_pandora::LArPandoraCollector::CollectMCParticles(evt, fSimModuleName, fTruthToParticles,
@@ -41,6 +43,8 @@ namespace lar_valrec{
     lar_pandora::LArPandoraCollector::CollectHits(evt, fHitModuleName, fHits);
     lar_pandora::LArPandoraCollector::CollectClusters(evt, fRecoModuleName, fClusters, fClustersToHits);
     lar_pandora::LArPandoraCollector::CollectTracks(evt,fStitcherModuleName, fTracks, fTracksToHits);
+    lar_pandora::LArPandoraCollector::CollectSpacePoints(evt,fRecoModuleName,fSpacePoints, 
+							 fSpacePointsToHits, fHitsToSpacePoints);   
 
     //Map hits onto MC particles and pandora PFParticles.
     lar_pandora::LArPandoraCollector::BuildMCParticleHitMaps(evt,fSimModuleName,fHits,fMCParticlesToHits, 

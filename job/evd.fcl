@@ -13,7 +13,7 @@ services.user.RecoDrawingOptions.ClusterModuleLabels:  [ "pandora" ]
 services.user.RecoDrawingOptions.TrackModuleLabels:  [ "particlestitcher" ]
 services.user.RecoDrawingOptions.WireModuleLabels:  [ ]
 services.user.RecoDrawingOptions.DrawHits:  1
-services.user.RecoDrawingOptions.DrawClusters:  3
+services.user.RecoDrawingOptions.DrawClusters:  1
 services.user.RecoDrawingOptions.DrawBezierTracks:  1
 #services.user.RecoDrawingOptions.BezierTrackModuleLabels:  [ "particlestitcher" ]
 services.user.RawDrawingOptions.DrawRawDataOrCalibWires:    1

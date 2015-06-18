@@ -35,7 +35,7 @@ product          version
 larsoft		v04_07_00
 gcc		v4_9_2
 cetbuildtools   v4_08_01       -       only_for_build
-larpandora      v04_04_04
+larpandora      v04_04_11
 end_product_list
 
 # We now define allowed qualifiers and the corresponding qualifiers for the depdencies.

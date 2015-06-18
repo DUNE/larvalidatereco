@@ -33,6 +33,7 @@ public:
   virtual const MCTruthToMCParticles& GetTruthToParticles() const=0;
   virtual const MCParticlesToMCTruth& GetParticlesToTruth() const=0;
   virtual const HitVector& GetHits() const=0;
+  virtual const SpacePointVector& GetSpacePoints() const=0;
   virtual const MCParticlesToHits& GetMCParticleToHitAssociations() const=0;
   virtual const HitsToMCParticles& GetHitToMCParticleAssociations() const=0;
   virtual const PFParticleVector& GetPFParticles() const=0;
@@ -44,6 +45,8 @@ public:
   virtual const HitsToClusters& GetHitsToClusters() const=0;
   virtual const TracksToHits& GetTracksToHits() const=0;
   virtual const HitsToTracks& GetHitsToTracks() const=0;
+  virtual const HitsToSpacePoints& GetHitsToSpacePoints() const=0;
+  virtual const SpacePointsToHits& GetSpacePointsToHits() const=0;
 
   //Getters for event metadata
   virtual int GetRun() const{return fRun;}
