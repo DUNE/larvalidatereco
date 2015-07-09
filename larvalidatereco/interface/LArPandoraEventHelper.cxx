@@ -18,7 +18,6 @@ namespace lar_valrec{
     fHits.clear();
     fMCParticles.clear();
     fMCVertices.clear();
-    fPFParticles.clear();
     fClusters.clear();
     fTracks.clear();
     fSpacePoints.clear();
@@ -27,8 +26,6 @@ namespace lar_valrec{
     fHitsToMCParticles.clear();
     fTruthToParticles.clear();
     fParticlesToTruth.clear();
-    fPFParticlesToHits.clear();
-    fHitsToPFParticles.clear();
     fClustersToHits.clear();
     fHitsToClusters.clear();
     fHitsToTracks.clear();

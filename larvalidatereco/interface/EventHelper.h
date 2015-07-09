@@ -36,9 +36,6 @@ public:
   virtual const SpacePointVector& GetSpacePoints() const=0;
   virtual const MCParticlesToHits& GetMCParticleToHitAssociations() const=0;
   virtual const HitsToMCParticles& GetHitToMCParticleAssociations() const=0;
-  virtual const PFParticleVector& GetPFParticles() const=0;
-  virtual const PFParticlesToHits& GetPFParticleToHitAssociations() const=0;
-  virtual const HitsToPFParticles& GetHitToPFParticleAssociations() const=0;
   virtual const ClusterVector& GetClusters() const=0;
   virtual const TrackVector& GetTracks() const=0;
   virtual const ClustersToHits& GetClustersToHits() const=0;

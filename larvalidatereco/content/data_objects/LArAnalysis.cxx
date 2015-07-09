@@ -57,6 +57,8 @@ ClassImp(LArAnalysis)
     HitTrackID        .clear();
     HitWire           .clear();
     HitTPC            .clear();
+    Hit3Pos           .clear();
+    HitIsMatched      .clear();
   }
 
   LArAnalysis::LArAnalysis():kUnassigned(0xDEADBEEF){this->Clear();}

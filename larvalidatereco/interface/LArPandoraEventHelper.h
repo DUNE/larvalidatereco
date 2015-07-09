@@ -33,9 +33,6 @@ public:
   virtual const MCParticlesToMCTruth& GetParticlesToTruth() const;
   virtual const MCParticlesToHits& GetMCParticleToHitAssociations() const;
   virtual const HitsToMCParticles& GetHitToMCParticleAssociations() const;
-  virtual const PFParticleVector& GetPFParticles() const;
-  virtual const PFParticlesToHits& GetPFParticleToHitAssociations() const;
-  virtual const HitsToPFParticles& GetHitToPFParticleAssociations() const;
   virtual const ClusterVector& GetClusters() const;
   virtual const TrackVector& GetTracks() const;
   virtual const ClustersToHits& GetClustersToHits() const;
@@ -55,7 +52,6 @@ public:
     HitVector fHits;
     MCParticleVector fMCParticles;
     MCTruthVector fMCVertices;
-    PFParticleVector fPFParticles;
     ClusterVector fClusters;
     TrackVector fTracks;
     SpacePointVector fSpacePoints;
@@ -65,8 +61,6 @@ public:
     MCParticlesToMCTruth fParticlesToTruth;
     MCParticlesToHits fMCParticlesToHits;
     HitsToMCParticles fHitsToMCParticles;
-    PFParticlesToHits fPFParticlesToHits;
-    HitsToPFParticles fHitsToPFParticles;
     ClustersToHits fClustersToHits;
     HitsToClusters fHitsToClusters;
     HitsToTracks fHitsToTracks;
@@ -100,10 +94,6 @@ public:
     return fHits;
   }
 
-  inline const PFParticleVector& LArPandoraEventHelper::GetPFParticles() const{
-    return fPFParticles;
-  }
-
   inline const ClusterVector& LArPandoraEventHelper::GetClusters() const{
     return fClusters;
   }
@@ -118,14 +108,6 @@ public:
 
   inline const HitsToMCParticles& LArPandoraEventHelper::GetHitToMCParticleAssociations() const{
     return fHitsToMCParticles;
-  }
-
-  inline const PFParticlesToHits& LArPandoraEventHelper::GetPFParticleToHitAssociations() const{
-    return fPFParticlesToHits;
-  }
-
-  inline const HitsToPFParticles& LArPandoraEventHelper::GetHitToPFParticleAssociations() const{
-    return fHitsToPFParticles;
   }
 
   inline const ClustersToHits& LArPandoraEventHelper::GetClustersToHits() const{

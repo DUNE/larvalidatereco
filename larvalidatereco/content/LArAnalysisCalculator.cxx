@@ -280,11 +280,12 @@ void LArAnalysisCalculator::FillEventRecoClusters(LArAnalysis* outputPtr,const E
   }
 }
 
-  void LArAnalysisCalculator::FillEventHits(LArAnalysis* outputPtr,const EventHelper& evHelper){
+void LArAnalysisCalculator::FillEventHits(LArAnalysis* outputPtr,const EventHelper& evHelper){
   
     const HitVector& hits=evHelper.GetHits();
     const HitsToClusters& hitsToClusters=evHelper.GetHitsToClusters();
     const HitsToTracks& hitsToTracks=evHelper.GetHitsToTracks();
+    const HitsToSpacePoints& hitsToSpacePoints=evHelper.GetHitsToSpacePoints();
     outputPtr->NHits=0;
     for(auto hit=hits.begin();hit!=hits.end();++hit){
       ++(outputPtr->NHits);
@@ -308,7 +309,16 @@ void LArAnalysisCalculator::FillEventRecoClusters(LArAnalysis* outputPtr,const E
       outputPtr->HitPeakT.push_back((*hit)->PeakTime());
       outputPtr->HitPlane.push_back((*hit)->WireID().Plane);
       outputPtr->HitWire.push_back((*hit)->WireID().Wire);      
-      outputPtr->HitTPC.push_back((*hit)->WireID().TPC);      
+      outputPtr->HitTPC.push_back((*hit)->WireID().TPC);
+      if(hitsToSpacePoints.count(*hit)&&hitsToSpacePoints.at(*hit).isNonnull()){
+	outputPtr->Hit3Pos.push_back(TVector3(hitsToSpacePoints.at(*hit)->XYZ()));
+	outputPtr->HitIsMatched.push_back(true);
+      }
+      else{
+	outputPtr->Hit3Pos.push_back(TVector3(0,0,0));
+	outputPtr->HitIsMatched.push_back(false);
+      }
     }
   }
 }
+
