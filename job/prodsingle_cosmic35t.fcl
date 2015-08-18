@@ -1,0 +1,94 @@
+#include "services_lbne.fcl"
+#include "singles_lbne.fcl"
+#include "largeantmodules_lbne.fcl"
+#include "detsimmodules_lbne.fcl"
+
+process_name: SinglesGen
+
+singlep_cosmic:
+{
+ module_type:           "SingleGen"
+ ParticleSelectionMode: 0           # 0 = use full list, 1 =  randomly select a single listed particle
+ PadOutVectors:         false       # false: require all vectors to be same length
+                                    # true:  pad out if a vector is size one
+ PDG:                   [ 13 ]      # list of pdg codes for particles to make
+ P0:                    [ 6. ]      # central value of momentum for each particle
+ SigmaP:                [ 0. ]      # variation about the central value
+ PDist:                 1           # 0 - uniform, 1 - gaussian distribution
+ T0:                    [ 0. ]      # starting time
+ SigmaX:                [ 0. ]      # variation in the starting x position
+ SigmaY:                [ 0. ]      # variation in the starting y position
+ SigmaZ:                [ 0.0 ]     # variation in the starting z position
+ SigmaT:                [ 0.0 ]     # variation in the starting time
+ PosDist:               0           # 0 - uniform, 1 - gaussian
+ TDist:                 0           # 0 - uniform, 1 - gaussian
+ Theta0XZ:              [ 0.001 ]      #angle in XZ plane (degrees)
+ Theta0YZ:              [ -90. ]    #angle in YZ plane (degrees)
+ SigmaThetaXZ:          [ 0. ]      #in degrees
+ SigmaThetaYZ:          [ 0. ]      #in degrees
+ AngleDist:             1           # 0 - uniform, 1 - gaussian
+
+ X0:                      [ 100.0 ]     # move it into a region of x covering a drift volume
+ Y0:                      [ 50. ]      # move it above the APA vertical gap
+ Z0:                      [ 100. ]       # move it up a touch just in case
+}
+
+
+services:
+{
+  # Load the service that manages root files for histograms.
+  TFileService: { fileName: "single35t_hist.root" }
+  Timing:       {}
+  RandomNumberGenerator: {} #ART native random number generator
+  user:         @local::lbne35t_simulation_services
+}
+
+#Start each new event with an empty event.
+source:
+{
+  module_type: EmptyEvent
+  maxEvents:   10          # Number of events to create
+  firstRun:    1           # Run number to use for this file
+  firstEvent:  1           # number of first event in the file
+}
+
+# Define and configure some modules to do work on each event.
+# First modules are defined; they are scheduled later.
+# Modules are grouped by type.
+physics:
+{
+ producers:
+ {
+   generator: @local::singlep_cosmic
+   largeant:  @local::lbne35t_largeant	  
+   daq:       @local::lbne35t_simwire       
+   rns:       { module_type: "RandomNumberSaver" }
+ }
+
+ #define the producer and filter modules for this path, order matters, 
+ #filters reject all following items.  see lines starting physics.producers below
+ simulate: [ generator, largeant, daq, rns ] 
+ 
+ #define the output stream, there could be more than one if using filters 
+ stream1:  [ out1 ]
+
+ #trigger_paths is a keyword and contains the paths that modify the art::event, 
+ #ie filters and producers
+ trigger_paths: [simulate] 
+
+ #end_paths is a keyword and contains the paths that do not modify the art::Event, 
+ #ie analyzers and output streams.  these all run simultaneously
+ end_paths:     [stream1]  
+}
+
+#block to define where the output goes.  if you defined a filter in the physics
+#block and put it in the trigger_paths then you need to put a SelectEvents: {SelectEvents: [XXX]}
+#entry in the output stream you want those to go to, where XXX is the label of the filter module(s)
+outputs:
+{
+ out1:
+ {
+   module_type: RootOutput
+   fileName:    "single35t_gen.root" #default file name, can override from command line with -o or --output
+ }
+}

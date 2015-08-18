@@ -1,0 +1,3 @@
+#include "standard_reco_lbne35t.fcl"
+physics.producers.dbclusterdc.HitsModuleLabel:         "dcheat"
+physics.producers.pandoradc.HitFinderModuleLabel:      "dcheat"
