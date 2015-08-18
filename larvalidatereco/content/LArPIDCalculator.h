@@ -2,7 +2,7 @@
 #define LAR_PID_CALCULATOR_H
 
 #include "data_objects/LArPID.h"
-#include "larvalidatereco/framework/CalculatorBase.h"
+#include "../framework/CalculatorBase.h"
 
 namespace lar_valrec{
 

@@ -1,7 +1,8 @@
 
 #ifndef __LAR_PID__
 #define __LAR_PID__
-
+#include "TMatrixD.h"
+#include "TVectorD.h"
 #include "TObject.h"
 
 ///
@@ -23,6 +24,10 @@ public:
   int                     EventEventRun;         ///< run number
   int                     EventID;               ///< event ID
   int                     EventSubRun;           ///< sub run number
+
+  std::vector<TVectorD> EigenValues;
+  std::vector<TMatrixD> EigenVectors;
+  std::vector<TMatrixD> Covariance;
 
   int NTracks;
   std::vector<int> TrackID;

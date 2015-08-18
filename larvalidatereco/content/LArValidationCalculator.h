@@ -1,8 +1,8 @@
 #ifndef LAR_VALIDATION_CALCULATOR_H
 #define LAR_VALIDATION_CALCULATOR_H
 
-#include "larvalidatereco/content/data_objects/LArValidation.h"
-#include "larvalidatereco/framework/CalculatorBase.h"
+#include "/data/t2k/phumhh/lbne/srcs/larvalidatereco/larvalidatereco/content/data_objects/LArValidation.h"
+#include "/data/t2k/phumhh/lbne/srcs/larvalidatereco/larvalidatereco/framework/CalculatorBase.h"
 
 namespace lar_valrec{
 

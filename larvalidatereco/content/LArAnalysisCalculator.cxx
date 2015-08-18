@@ -66,8 +66,9 @@ namespace lar_valrec{
 
 	entryPoint=*prevPoint;
 	for(;
-	    !IsInActiveRegion(entryPoint);
-	    entryPoint+=(*pointIter-entryPoint).Unit()*0.1){}
+	    !IsInActiveRegion(entryPoint)&&(*pointIter-*prevPoint).Angle(*pointIter-entryPoint)<0.1;
+	    //entryPoint+=(*pointIter-entryPoint).Unit()*0.1){}
+	    entryPoint+=(*pointIter-*prevPoint).Unit()*0.1){}
       }
     }
 
