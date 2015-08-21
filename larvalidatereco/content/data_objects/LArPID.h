@@ -3,6 +3,7 @@
 #define __LAR_PID__
 #include "TMatrixD.h"
 #include "TVectorD.h"
+#include "TVector3.h"
 #include "TObject.h"
 
 ///
@@ -25,15 +26,21 @@ public:
   int                     EventID;               ///< event ID
   int                     EventSubRun;           ///< sub run number
 
+
   std::vector<TVectorD> EigenValues;
   std::vector<TMatrixD> EigenVectors;
   std::vector<TMatrixD> Covariance;
+  std::vector<std::vector<TVector3>> PCAHitsSpacePoints;
+
 
   int NTracks;
   std::vector<int> TrackID;
+
+
   ///
   /// Reset parameter values and vector containers
   ///
+
   virtual void Clear();
 
   ///

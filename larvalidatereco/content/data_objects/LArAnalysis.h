@@ -210,9 +210,7 @@ public:
   std::vector<T3Vec>           Hit3Pos;               ///< reconstructed 3D-matched position [NHits]
   std::vector<bool>            HitIsMatched;          ///< whether hit has a valid 3D position [NHits]
 
-  std::vector<TVectorD>        EigenValues;
-  std::vector<TMatrixD>        EigenVectors;
-  std::vector<TMatrixD>        Covariance;
+
   ///
   /// Reset parameter values and vector containers
   ///

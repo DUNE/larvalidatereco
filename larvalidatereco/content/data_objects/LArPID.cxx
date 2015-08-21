@@ -8,6 +8,11 @@ ClassImp(LArPID)
     EventID       =        kUnassigned;
     EventSubRun   =        kUnassigned;
 
+    EigenValues  .clear();
+    EigenVectors .clear();
+    Covariance   .clear();
+    PCAHitsSpacePoints .clear();
+
     NTracks=kUnassigned;
   }
 
