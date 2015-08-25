@@ -57,7 +57,7 @@ physics:
 
   ### Set up a chain of Producer modules
   reco: [ caldata, hitcheat, pandora, particlestitcher, particletracks ]
-  #reco: [ caldata, hitcheat, pandora ]	
+#  reco: [ caldata, hitcheat, pandora ]	
 
   ### Set up a chain of Analyzer modules
   ana: [ pandorana, pandoramonitoring, analysistree  ]
@@ -74,6 +74,7 @@ physics:
 
 ### Configure the Producer modules
 physics.producers.pandora.HitFinderModuleLabel: "hitcheat"
+physics.producers.pandora.BuildShowers: true
 physics.producers.particlestitcher.PFParticleModuleLabel: "pandora"
 physics.producers.particlestitcher.UseXCoordinate: false
 physics.producers.particletracks.PFParticleModuleLabel: "particlestitcher"

@@ -152,6 +152,7 @@ void LArAnalysisCalculator::Calculate(TObject* tObjectPtr,const VarHelper& varHe
   this->FillEventMCVertices(outputPtr,evHelper);
   this->FillEventRecoTracks(outputPtr,evHelper);
   this->FillEventRecoClusters(outputPtr,evHelper);
+  this->FillEventRecoShowers(outputPtr,evHelper);
   this->FillEventHits(outputPtr,evHelper);
 }
 
@@ -280,11 +281,29 @@ void LArAnalysisCalculator::FillEventRecoClusters(LArAnalysis* outputPtr,const E
   }
 }
 
+void LArAnalysisCalculator::FillEventRecoShowers(LArAnalysis* outputPtr,const EventHelper& evHelper){
+
+  const ShowerVector& showers=evHelper.GetShowers();
+  const ShowersToHits& showersToHits=evHelper.GetShowersToHits();
+  outputPtr->NShowers=0;
+  for(auto shower=showers.begin();shower!=showers.end();++shower){
+    ++(outputPtr->NShowers);
+    
+    outputPtr->ShowerID.push_back((*shower)->ID());
+    outputPtr->ShowerStart4Pos.push_back(TLorentzVector((*shower)->ShowerStart(),std::numeric_limits<double>::max()));
+    outputPtr->ShowerPointing.push_back((*shower)->Direction());
+    outputPtr->ShowerNHits.push_back(showersToHits.at(*shower).size());
+
+  }
+}
+
+
 void LArAnalysisCalculator::FillEventHits(LArAnalysis* outputPtr,const EventHelper& evHelper){
   
     const HitVector& hits=evHelper.GetHits();
     const HitsToClusters& hitsToClusters=evHelper.GetHitsToClusters();
     const HitsToTracks& hitsToTracks=evHelper.GetHitsToTracks();
+    const HitsToShowers& hitsToShowers=evHelper.GetHitsToShowers();
     const HitsToSpacePoints& hitsToSpacePoints=evHelper.GetHitsToSpacePoints();
     outputPtr->NHits=0;
     for(auto hit=hits.begin();hit!=hits.end();++hit){
@@ -304,6 +323,13 @@ void LArAnalysisCalculator::FillEventHits(LArAnalysis* outputPtr,const EventHelp
       }
       else{
 	outputPtr->HitTrackID.push_back(-1);
+      }
+
+      if(hitsToShowers.count(*hit)){
+	outputPtr->HitShowerID.push_back(hitsToShowers.at(*hit)->ID());  
+      }
+      else{
+	outputPtr->HitShowerID.push_back(-1);
       }
 
       outputPtr->HitPeakT.push_back((*hit)->PeakTime());

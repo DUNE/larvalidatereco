@@ -32,10 +32,10 @@ flcdir  product_dir     fcl
 # Add the dependent product and version
 
 product          version
-larsoft		v04_07_00
+larsoft		v04_05_00
 gcc		v4_9_2
-cetbuildtools   v4_08_01       -       only_for_build
-larpandora      v04_04_11
+cetbuildtools   v4_09_02       -       only_for_build
+larpandora      v04_03_05
 end_product_list
 
 # We now define allowed qualifiers and the corresponding qualifiers for the depdencies.

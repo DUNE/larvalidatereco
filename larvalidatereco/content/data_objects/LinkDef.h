@@ -11,4 +11,5 @@
 #pragma link C++ class LArAnalysis+;
 #pragma link C++ class LArValidation+;
 #pragma link C++ class LArPID+;
+#pragma link C++ class LArTracking+;
 #endif

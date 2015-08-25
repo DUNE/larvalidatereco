@@ -35,12 +35,12 @@ physics:
   analyzers:{
 	valrec: {
     		module_type:		LArValidateReco
-    		Variables: 		[Analysis,Validation,Tracking]
+    		Variables: 		[Analysis,Validation]
     		TreeName: 		valrec
     		SimModuleName:		largeant
     		RecoModuleName: 	pandora
     		HitModuleName: 		hit35t
-    		StitcherModuleName: 	particlestitcher
+    		StitcherModuleName: 	pandora
    	}    				
   }
 

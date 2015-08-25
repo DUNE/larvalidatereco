@@ -38,10 +38,13 @@ public:
   virtual const HitsToMCParticles& GetHitToMCParticleAssociations() const=0;
   virtual const ClusterVector& GetClusters() const=0;
   virtual const TrackVector& GetTracks() const=0;
+  virtual const ShowerVector& GetShowers() const=0;
   virtual const ClustersToHits& GetClustersToHits() const=0;
   virtual const HitsToClusters& GetHitsToClusters() const=0;
   virtual const TracksToHits& GetTracksToHits() const=0;
   virtual const HitsToTracks& GetHitsToTracks() const=0;
+  virtual const ShowersToHits& GetShowersToHits() const=0;
+  virtual const HitsToShowers& GetHitsToShowers() const=0;
   virtual const HitsToSpacePoints& GetHitsToSpacePoints() const=0;
   virtual const SpacePointsToHits& GetSpacePointsToHits() const=0;
 
