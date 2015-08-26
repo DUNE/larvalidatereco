@@ -2,7 +2,8 @@
 #define LAR_PID_CALCULATOR_H
 
 #include "data_objects/LArPID.h"
-#include "../framework/CalculatorBase.h"
+#include "larvalidatereco/framework/CalculatorBase.h"
+#include "AnalysisAlg/CalorimetryAlg.h"
 
 namespace lar_valrec{
 
@@ -21,7 +22,17 @@ namespace lar_valrec{
 
     virtual ~LArPIDCalculator(){}
 
-private:
+    bool IsInActiveRegion(const TVector3& position);
+ 
+    double GetTrackLength(std::vector<TVector3>& points,int trackIndex);
+
+    void FillEventMetadata(LArPID* outputPtr,const EventHelper& evHelper);
+
+    void FillEventMCTraj(LArPID* outputPtr,const EventHelper& evHelper);
+
+    void FillEventdEdx(LArPID* outputPtr,const EventHelper& evHelper);
+
+  private:
   };
 }
 
