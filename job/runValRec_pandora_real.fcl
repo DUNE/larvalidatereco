@@ -35,7 +35,7 @@ physics:
   analyzers:{
 	valrec: {
     		module_type:		LArValidateReco
-    		Variables: 		[Analysis,Validation]
+    		Variables: 		[Analysis,Validation,PID]
     		TreeName: 		valrec
     		SimModuleName:		largeant
     		RecoModuleName: 	pandora

@@ -8,6 +8,7 @@ art_make(	BASENAME_ONLY
                         Geometry
                         Geometry_service
                         RecoObjects
+                        AnalysisAlg
                         LArProperties_service
                         DetectorProperties_service
                         Utilities

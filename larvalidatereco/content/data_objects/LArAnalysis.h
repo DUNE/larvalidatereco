@@ -209,6 +209,8 @@ public:
   std::vector<int>             HitTPC;                ///< reconstructed hit TPC            [NHits]
   std::vector<T3Vec>           Hit3Pos;               ///< reconstructed 3D-matched position [NHits]
   std::vector<bool>            HitIsMatched;          ///< whether hit has a valid 3D position [NHits]
+
+
   ///
   /// Reset parameter values and vector containers
   ///

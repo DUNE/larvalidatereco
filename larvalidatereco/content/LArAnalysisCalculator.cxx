@@ -66,7 +66,8 @@ namespace lar_valrec{
 
 	entryPoint=*prevPoint;
 	for(;
-	    !IsInActiveRegion(entryPoint);
+	    !IsInActiveRegion(entryPoint)&&(*pointIter-*prevPoint).Angle(*pointIter-entryPoint)<0.1;
+	    //entryPoint+=(*pointIter-entryPoint).Unit()*0.1){}
 	    entryPoint+=(*pointIter-*prevPoint).Unit()*0.1){}
       }
     }
@@ -146,13 +147,14 @@ void LArAnalysisCalculator::Calculate(TObject* tObjectPtr,const VarHelper& varHe
   }
   outputPtr->Clear();
 
-  
+      
   this->FillEventMetadata(outputPtr,evHelper);
   this->FillEventMCTraj(outputPtr,evHelper);
   this->FillEventMCVertices(outputPtr,evHelper);
   this->FillEventRecoTracks(outputPtr,evHelper);
   this->FillEventRecoClusters(outputPtr,evHelper);
   this->FillEventHits(outputPtr,evHelper);
+  
 }
 
 void LArAnalysisCalculator::FillEventMetadata(LArAnalysis* outputPtr,const EventHelper& evHelper){
@@ -193,19 +195,20 @@ void LArAnalysisCalculator::FillEventMCTraj(LArAnalysis* outputPtr,const EventHe
     //Particle and parent indices
     outputPtr->TrajIDMC.push_back((*particle)->TrackId());
     outputPtr->TrajParentIDMC.push_back((*particle)->Mother());
-
+    
     std::vector<TVector3> trackPoints;
 
     for(unsigned int point=0;point!=(*particle)->NumberTrajectoryPoints();++point){
       trackPoints.push_back((*particle)->Position(point).Vect());
     }
-
+    
     //Start and end momenta and positions
     outputPtr->TrajStart4MomMC.push_back((*particle)->Momentum());
     outputPtr->TrajStart4PosMC.push_back((*particle)->Position());
     outputPtr->TrajEnd4MomMC.push_back((*particle)->EndMomentum());
     outputPtr->TrajEnd4PosMC.push_back((*particle)->EndPosition());
     outputPtr->TrajLengthMC.push_back(GetTrackLength(trackPoints,outputPtr->NTrajMC==1?outputPtr->EventID:-1));
+    
   }
 }
 

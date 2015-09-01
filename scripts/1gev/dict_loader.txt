@@ -1,0 +1,6 @@
+// Generate necessary dictionary
+#include <vector>
+#include <TVector.h>
+#ifdef __MAKECINT__
+#pragma link C++ class vector<TVectorT<Double_t> >+;
+#endif

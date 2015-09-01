@@ -11,6 +11,8 @@
 #include "PandoraTypedefs.h"
 #include "LArValidateRecon.h"
 #include "larvalidatereco/framework/VarHelper.h"
+#include "fhiclcpp/ParameterSet.h"
+#include "AnalysisAlg/CalorimetryAlg.h"
 
 namespace lar_valrec
 {
@@ -21,7 +23,13 @@ namespace lar_valrec
 class EventHelper
 {
 public:
-  EventHelper(const fhicl::ParameterSet& pset){}
+  EventHelper(const fhicl::ParameterSet& pset){
+
+  fPset.put("CalAmpConstants", pset.get< std::vector<double> >("CaloAmpConstants"));
+  fPset.put("CalAreaConstants", pset.get< std::vector<double> >("CaloAreaConstants"));
+  fPset.put("CaloUseModBox", pset.get< bool >("CalUseModBox"));
+
+  }
 
   ///Get event metadata and call LoadEvent_ method implemented by derived class
   virtual void LoadEvent(const art::Event& evt);
@@ -52,7 +60,9 @@ public:
   ///Magnitude of E field only for now
   virtual double GetEField() const{return fEField;}
   virtual int GetEventT0() const{return fEventT0;}
-  
+
+  const fhicl::ParameterSet& GetParameterSet() const {return fPset;}
+
   virtual ~EventHelper(){}
 
 private:
@@ -66,6 +76,8 @@ private:
   int     fEventID;     ///< event ID
   double  fEField;      ///< electric field strength
   int     fEventT0;     ///< t_0 of the event
+
+  fhicl::ParameterSet fPset;
 
 };
 
