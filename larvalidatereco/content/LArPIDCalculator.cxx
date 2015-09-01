@@ -96,28 +96,11 @@ namespace lar_valrec{
   
   // Call PCA Method
   LArPIDPCA(tObjectPtr, varHelper, evHelper);
-  }
-
-  /*
-  const TrackVector& tracks=evHelper.GetTracks();
-  const TracksToHits& tracksToHits=evHelper.GetTracksToHits();
-  const MCParticlesToHits& particlesToHits=evHelper.GetMCParticleToHitAssociations();
-  const HitsToMCParticles& hitsToParticles=evHelper.GetHitToMCParticleAssociations();
-
-  FillClusterPCA(outputPtr,evHelper);
-
-  static void LArPIDCalculator::FillClusterPCA(LArPID* outputPtr,const EventHelper& evHelper){
-    const ClusterVector& clusters=evHelper.GetClusters();
-
-    for(auto cl=clusters.cbegin();cl!=clusters.cend();++cl){
-      
-  */
 
   this->FillEventMetadata(outputPtr,evHelper);
   this->FillEventMCTraj(outputPtr,evHelper);
-  //this->FillEventRecoTracks(outputPtr,evHelper);  
   this->FillEventdEdx(outputPtr,evHelper);
-  
+
   }
 
   bool LArPIDCalculator::IsInActiveRegion(const TVector3& position){
