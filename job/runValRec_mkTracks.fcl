@@ -1,4 +1,4 @@
-#include "services_lbne.fcl"
+#include "services_dune.fcl"
 
 process_name: LArValRec
 
@@ -8,7 +8,7 @@ services:
   TFileService: { fileName: "ntuple.root" }
   Timing:       {}
   SimpleMemoryCheck:     { ignoreTotal: 1 } # default is one
-  user:         @local::lbne35t_services
+  user:         @local::dune35t_services
 }
 
 

@@ -1,3 +1,0 @@
-#include "standard_reco_lbne35t.fcl"
-#physics.producers.dbclusterdc.HitsModuleLabel:         "dbcluster"
-#physics.producers.pandoradc.HitFinderModuleLabel:      "dbcluster"

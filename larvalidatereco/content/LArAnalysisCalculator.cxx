@@ -22,11 +22,12 @@ namespace lar_valrec{
   bool LArAnalysisCalculator::IsInActiveRegion(const TVector3& position){
     
     art::ServiceHandle<geo::Geometry> geomService;
-    geo::Geometry::TPC_iterator tpcIter;
+    geo::Geometry::TPC_iterator tpcIter=geomService->begin_TPC();
 
     for(;tpcIter++;){
       const geo::TPCGeo* tpcGeom=tpcIter.get();
       if(!tpcGeom) break;
+
       TVector3 localPos=tpcGeom->WorldToLocal(position);
       const TGeoVolume* vol=tpcGeom->ActiveVolume();
       Double_t xyz[3]={0,0,0};
