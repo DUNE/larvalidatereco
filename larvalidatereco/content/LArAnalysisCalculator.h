@@ -32,6 +32,9 @@ private:
 
     ///Fill reconstructed tracks
     static void FillEventRecoTracks(LArAnalysis* outputPtr,const EventHelper& evHelper);
+    
+    //Fill reconstructed showers
+    static void FillEventRecoShowers(LArAnalysis* outputPtr,const EventHelper& evHelper);
 
     ///Fill reconstructed clusters
     static void FillEventRecoClusters(LArAnalysis* outputPtr,const EventHelper& evHelper);

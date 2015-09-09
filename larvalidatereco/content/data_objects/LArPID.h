@@ -85,9 +85,6 @@ public:
   std::vector<TMatrixD> Covariance;
   std::vector<std::vector<TVector3>> PCAHitsSpacePoints;
 
-  int NTracks;
-  std::vector<int> TrackID;
-
   ///
   /// Reset parameter values and vector containers
   ///

@@ -35,10 +35,13 @@ public:
   virtual const HitsToMCParticles& GetHitToMCParticleAssociations() const;
   virtual const ClusterVector& GetClusters() const;
   virtual const TrackVector& GetTracks() const;
+  virtual const ShowerVector& GetShowers() const;
   virtual const ClustersToHits& GetClustersToHits() const;
   virtual const HitsToClusters& GetHitsToClusters() const;
   virtual const TracksToHits& GetTracksToHits() const;
   virtual const HitsToTracks& GetHitsToTracks() const;
+  virtual const ShowersToHits& GetShowersToHits() const;
+  virtual const HitsToShowers& GetHitsToShowers() const;
   virtual const HitsToSpacePoints& GetHitsToSpacePoints() const;
   virtual const SpacePointsToHits& GetSpacePointsToHits() const;
 
@@ -54,6 +57,7 @@ public:
     MCTruthVector fMCVertices;
     ClusterVector fClusters;
     TrackVector fTracks;
+    ShowerVector fShowers;
     SpacePointVector fSpacePoints;
 
     //Relationships
@@ -64,6 +68,8 @@ public:
     ClustersToHits fClustersToHits;
     HitsToClusters fHitsToClusters;
     HitsToTracks fHitsToTracks;
+    ShowersToHits fShowersToHits;
+    HitsToShowers fHitsToShowers;
     TracksToHits fTracksToHits;
     SpacePointsToHits fSpacePointsToHits;
     HitsToSpacePoints fHitsToSpacePoints;
@@ -102,6 +108,10 @@ public:
     return fTracks;
   }
 
+  inline const ShowerVector& LArPandoraEventHelper::GetShowers() const{
+    return fShowers;
+  }
+
   inline const MCParticlesToHits& LArPandoraEventHelper::GetMCParticleToHitAssociations() const{
     return fMCParticlesToHits;
   }
@@ -124,6 +134,14 @@ public:
 
   inline const HitsToTracks& LArPandoraEventHelper::GetHitsToTracks() const{
     return fHitsToTracks;
+  }
+
+  inline const ShowersToHits& LArPandoraEventHelper::GetShowersToHits() const{
+    return fShowersToHits;
+  }
+
+  inline const HitsToShowers& LArPandoraEventHelper::GetHitsToShowers() const{
+    return fHitsToShowers;
   }
 
   inline const SpacePointVector& LArPandoraEventHelper::GetSpacePoints() const{

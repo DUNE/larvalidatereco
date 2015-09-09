@@ -1,11 +1,11 @@
-#include "services_lbne.fcl"
-#include "singles_lbne.fcl"
-#include "largeantmodules_lbne.fcl"
-#include "detsimmodules_lbne.fcl"
+#include "services_dune.fcl"
+#include "singles_dune.fcl"
+#include "largeantmodules_dune.fcl"
+#include "detsimmodules_dune.fcl"
 
 process_name: SinglesGen
 
- lbne35t_singlep:
+ dune35t_singlep:
  {
   module_type:           "SingleGen"
   ParticleSelectionMode: 0           # 0 = use full list, 1 =  randomly select a single listed particle
@@ -40,7 +40,7 @@ services:
   TFileService: { fileName: "single35t_hist.root" }
   Timing:       {}
   RandomNumberGenerator: {} #ART native random number generator
-  user:         @local::lbne35t_simulation_services
+  user:         @local::dune35t_simulation_services
 }
 
 #Start each new event with an empty event.
@@ -59,9 +59,9 @@ physics:
 {
  producers:
  {
-   generator: @local::lbne35t_singlep
-   largeant:  @local::lbne35t_largeant	  
-   daq:       @local::lbne35t_simwire       
+   generator: @local::dune35t_singlep
+   largeant:  @local::dune35t_largeant	  
+   daq:       @local::dune35t_simwire       
    rns:       { module_type: "RandomNumberSaver" }
  }
 

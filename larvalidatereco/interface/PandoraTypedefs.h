@@ -35,6 +35,7 @@ using lar_pandora::MCParticlesToPFParticles;
 using lar_pandora::HitsToPFParticles;
 using lar_pandora::HitsToMCParticles;
 using lar_pandora::HitsToTrackIDEs;
+using lar_pandora::ShowersToHits;
 
 using lar_pandora::PFParticleMap;
 using lar_pandora::ClusterMap;
@@ -44,6 +45,7 @@ using lar_pandora::MCParticleMap;
 
 //Some new relationships
 typedef std::map< art::Ptr<recob::Hit>, art::Ptr<recob::Track> >              HitsToTracks;
+typedef std::map< art::Ptr<recob::Hit>, art::Ptr<recob::Shower> >              HitsToShowers;
 typedef std::map< art::Ptr<recob::Track>, std::vector<art::Ptr<recob::Hit> > >  TracksToHits;
 typedef std::map< art::Ptr<recob::Hit>,   art::Ptr<recob::Cluster> >            HitsToClusters;
 typedef std::map< art::Ptr<recob::Hit>,   art::Ptr<recob::Cluster> >            HitsToClusters;

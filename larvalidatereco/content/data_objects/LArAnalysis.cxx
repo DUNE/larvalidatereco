@@ -48,6 +48,12 @@ ClassImp(LArAnalysis)
     ClusterNHits      .clear();
     ClusterTrackID    .clear();
 
+    NShowers          = kUnassigned;;
+    ShowerID          .clear();
+    ShowerNHits       .clear();
+    ShowerStart4Pos   .clear();
+    ShowerPointing    .clear();
+
     NHits             = kUnassigned;
     HitChannel        .clear();
     HitCharge         .clear();
@@ -55,6 +61,7 @@ ClassImp(LArAnalysis)
     HitPeakT          .clear();
     HitPlane          .clear();
     HitTrackID        .clear();
+    HitShowerID       .clear();
     HitWire           .clear();
     HitTPC            .clear();
     Hit3Pos           .clear();

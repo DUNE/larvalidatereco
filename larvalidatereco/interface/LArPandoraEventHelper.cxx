@@ -21,6 +21,7 @@ namespace lar_valrec{
     fClusters.clear();
     fTracks.clear();
     fSpacePoints.clear();
+    fShowers.clear();
     //Relationships
     fMCParticlesToHits.clear();
     fHitsToMCParticles.clear();
@@ -30,6 +31,7 @@ namespace lar_valrec{
     fHitsToClusters.clear();
     fHitsToTracks.clear();
     fTracksToHits.clear();
+    fShowersToHits.clear();
     fSpacePointsToHits.clear();
     fHitsToSpacePoints.clear();
 
@@ -41,7 +43,8 @@ namespace lar_valrec{
     lar_pandora::LArPandoraCollector::CollectClusters(evt, fRecoModuleName, fClusters, fClustersToHits);
     lar_pandora::LArPandoraCollector::CollectTracks(evt,fStitcherModuleName, fTracks, fTracksToHits);
     lar_pandora::LArPandoraCollector::CollectSpacePoints(evt,fRecoModuleName,fSpacePoints, 
-							 fSpacePointsToHits, fHitsToSpacePoints);   
+							 fSpacePointsToHits, fHitsToSpacePoints);
+    lar_pandora::LArPandoraCollector::CollectShowers(evt,fRecoModuleName,fShowers,fShowersToHits);
 
     //Map hits onto MC particles and pandora PFParticles.
     lar_pandora::LArPandoraCollector::BuildMCParticleHitMaps(evt,fSimModuleName,fHits,fMCParticlesToHits, 
@@ -65,6 +68,14 @@ namespace lar_valrec{
     for(auto trIter=fTracksToHits.begin();trIter!=fTracksToHits.end();++trIter){
       for(auto hitIter=trIter->second.begin();hitIter!=trIter->second.end();++hitIter){
 	fHitsToTracks[*hitIter]=trIter->first;
+      }
+    }    
+
+    //Reverse showers->hits mapping
+    fHitsToShowers.clear();
+    for(auto shIter=fShowersToHits.begin();shIter!=fShowersToHits.end();++shIter){
+      for(auto hitIter=shIter->second.begin();hitIter!=shIter->second.end();++hitIter){
+	fHitsToShowers[*hitIter]=shIter->first;
       }
     }    
   }

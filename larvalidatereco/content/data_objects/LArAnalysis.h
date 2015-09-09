@@ -196,6 +196,15 @@ public:
   std::vector<int>        ClusterTrackID;        ///< ID of track this cluster belongs to [NClusters]
 
   ///
+  /// Reconstructed Showers
+  ///
+  int                     NShowers;
+  std::vector<int>        ShowerID;
+  std::vector<int>        ShowerNHits;
+  std::vector<TLVec>      ShowerStart4Pos;
+  std::vector<T3Vec>      ShowerPointing;
+
+  ///
   /// Reconstructed Hits
   ///
   int                     NHits;                      ///< number of reconstructed hits
@@ -205,6 +214,7 @@ public:
   std::vector<float>           HitPeakT;              ///< reconstructed hit peak time       [NHits]
   std::vector<int>             HitPlane;              ///< reconstructed hit plane           [NHits]
   std::vector<int>             HitTrackID;            ///< ID of track this hit belongs to   [NHits]
+  std::vector<int>             HitShowerID;           ///< ID of shower this hit belongs to   [NHits]
   std::vector<int>             HitWire;               ///< reconstructed hit wire            [NHits]
   std::vector<int>             HitTPC;                ///< reconstructed hit TPC            [NHits]
   std::vector<T3Vec>           Hit3Pos;               ///< reconstructed 3D-matched position [NHits]
