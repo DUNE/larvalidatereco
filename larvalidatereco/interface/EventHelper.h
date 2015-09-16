@@ -13,9 +13,13 @@
 #include "larvalidatereco/framework/VarHelper.h"
 #include "fhiclcpp/ParameterSet.h"
 #include "AnalysisAlg/CalorimetryAlg.h"
+#include "AnalysisBase/Calorimetry.h"
 
 namespace lar_valrec
 {
+
+  typedef std::vector<art::Ptr<anab::Calorimetry>> CaloVector;
+typedef std::map< art::Ptr<recob::Track>, art::Ptr<anab::Calorimetry> > TracksToCalo;  
 
 /**
  *  @brief  EventHelper class
@@ -42,6 +46,7 @@ public:
   virtual const MCParticlesToMCTruth& GetParticlesToTruth() const=0;
   virtual const HitVector& GetHits() const=0;
   virtual const SpacePointVector& GetSpacePoints() const=0;
+  virtual const CaloVector& GetCalo() const=0;
   virtual const MCParticlesToHits& GetMCParticleToHitAssociations() const=0;
   virtual const HitsToMCParticles& GetHitToMCParticleAssociations() const=0;
   virtual const ClusterVector& GetClusters() const=0;
@@ -55,6 +60,7 @@ public:
   virtual const HitsToShowers& GetHitsToShowers() const=0;
   virtual const HitsToSpacePoints& GetHitsToSpacePoints() const=0;
   virtual const SpacePointsToHits& GetSpacePointsToHits() const=0;
+  virtual const TracksToCalo& GetTracksToCalo() const=0;
 
   //Getters for event metadata
   virtual int GetRun() const{return fRun;}

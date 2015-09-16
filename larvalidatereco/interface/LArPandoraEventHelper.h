@@ -36,6 +36,7 @@ public:
   virtual const ClusterVector& GetClusters() const;
   virtual const TrackVector& GetTracks() const;
   virtual const ShowerVector& GetShowers() const;
+  virtual const CaloVector& GetCalo() const;
   virtual const ClustersToHits& GetClustersToHits() const;
   virtual const HitsToClusters& GetHitsToClusters() const;
   virtual const TracksToHits& GetTracksToHits() const;
@@ -44,12 +45,16 @@ public:
   virtual const HitsToShowers& GetHitsToShowers() const;
   virtual const HitsToSpacePoints& GetHitsToSpacePoints() const;
   virtual const SpacePointsToHits& GetSpacePointsToHits() const;
+  virtual const TracksToCalo& GetTracksToCalo() const;
 
  private: 
 
     ///Collect objects from event
     ///Called by base class public LoadEvent method.
     virtual void LoadEvent_(const art::Event& evt);
+
+    static void CollectCalo(const art::Event &evt, const std::string label, CaloVector &caloVector, 
+			    TracksToCalo &tracksToCalo);
 
     //Input data products
     HitVector fHits;
@@ -59,6 +64,7 @@ public:
     TrackVector fTracks;
     ShowerVector fShowers;
     SpacePointVector fSpacePoints;
+    CaloVector fCalo;
 
     //Relationships
     MCTruthToMCParticles fTruthToParticles;
@@ -73,11 +79,13 @@ public:
     TracksToHits fTracksToHits;
     SpacePointsToHits fSpacePointsToHits;
     HitsToSpacePoints fHitsToSpacePoints;
+    TracksToCalo fTracksToCalo;
 
     std::string fSimModuleName;
     std::string fRecoModuleName;
     std::string fHitModuleName;
     std::string fStitcherModuleName;
+    std::string fCaloModuleName;
 };
 
   inline const MCParticleVector& LArPandoraEventHelper::GetMCParticles() const{
@@ -110,6 +118,10 @@ public:
 
   inline const ShowerVector& LArPandoraEventHelper::GetShowers() const{
     return fShowers;
+  }
+
+  inline const CaloVector& LArPandoraEventHelper::GetCalo() const{
+    return fCalo;
   }
 
   inline const MCParticlesToHits& LArPandoraEventHelper::GetMCParticleToHitAssociations() const{
@@ -156,6 +168,9 @@ public:
     return fHitsToSpacePoints;
   }
 
+  inline const TracksToCalo& LArPandoraEventHelper::GetTracksToCalo() const{
+    return fTracksToCalo;
+  }
 
 } // namespace lar_valrec
 

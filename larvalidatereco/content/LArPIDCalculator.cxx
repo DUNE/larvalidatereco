@@ -28,10 +28,9 @@ namespace lar_valrec{
     if(!outputPtr){
       exit(1);
     }
-    outputPtr->Clear();
 
     // Define the TPrincipal
-    TPrincipal* principal = new TPrincipal(3,"ND"); 
+    TPrincipal* principal = new TPrincipal(3,"D"); 
     // Define variables to hold the eigenvalues and eigenvectors
      const TVectorD* eigenval = new TVectorD();
      const TMatrixD* eigenvec = new TMatrixD();
@@ -54,6 +53,7 @@ namespace lar_valrec{
 		    // CHECK FOR EXISTENCE OF KEY TO PREVENT MAP OVERRUN
 		    if(hitsToSpacePoints.count(*hits)) 
 		      {
+			TVector3 xyz=hitsToSpacePoints.at(*hits)->XYZ();
 			principal->AddRow( hitsToSpacePoints.at(*hits)->XYZ() );
 		      }
 		  }

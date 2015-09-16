@@ -35,13 +35,17 @@ physics:
   analyzers:{
 	valrec: {
     		module_type:		LArValidateReco
-    		Variables: 		[Analysis,Validation,PID]
+    		#Variables: 		[Analysis,Validation,PID]
     		Variables: 		[Analysis,Validation,PID,Tracking]
     		TreeName: 		valrec
     		SimModuleName:		largeant
     		RecoModuleName: 	pandora
     		HitModuleName: 		hit35t
     		StitcherModuleName: 	particlestitcher
+		CaloModuleName:		pandoracalo
+		CaloAmpConstants:        [ 0.9033e-3, 1.0287e-3, 0.8800e-3 ]
+                CaloAreaConstants:       [ 5.1822e-3, 5.2682e-3, 5.3962e-3 ]
+                CalUseModBox:            true
    	}    				
   }
 
