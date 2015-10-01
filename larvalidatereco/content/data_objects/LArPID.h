@@ -77,13 +77,23 @@ public:
   std::vector<int>             HitTPC;                ///< reconstructed hit TPC             [NHits]
   std::vector<T3Vec>           Hit3Pos;               ///< reconstructed 3D-matched position [NHits]
   std::vector<bool>            HitIsMatched;          ///< whether hit has a valid 3D position [NHits]
-  std::vector<double>          HitdEdxAmp;            ///< dE/dx using hit amplitude         [NHits]
-  std::vector<double>          HitdEdxArea;           ///< dE/dx using hit area              [NHits]
+  //std::vector<double>          HitdEdxAmp;            ///< dE/dx using hit amplitude         [NHits]
+  //std::vector<double>          HitdEdxArea;           ///< dE/dx using hit area              [NHits]
   
   std::vector<TVectorD> EigenValues;
   std::vector<TMatrixD> EigenVectors;
   std::vector<TMatrixD> Covariance;
+  std::vector<TVectorD> MeanValues;
+  std::vector<double>   AnglePrincipalTrueTrack;
   std::vector<std::vector<TVector3>> PCAHitsSpacePoints;
+  std::vector<double>   AvgedEdxAmpStart;
+  std::vector<double>   AvgedEdxAmpEnd;
+  std::vector<double>   AvgedEdxAreaStart;
+  std::vector<double>   AvgedEdxAreaEnd;
+  std::vector<double>   EvalRatio;
+  std::vector<double>   ChargeRatioCoreHalo;
+  std::vector<double>   Conicalness;
+  std::vector<double>   Concentration;
 
   ///
   /// Reset parameter values and vector containers

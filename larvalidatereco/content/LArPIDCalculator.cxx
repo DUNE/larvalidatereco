@@ -22,12 +22,20 @@ namespace lar_valrec{
   static LArPID_register __LArPIDRegister;
 
 
-  void LArPIDPCA(TObject* tObjectPtr,const VarHelper& varHelper,const EventHelper& evHelper)
+  void LArPIDCalculator::FillEventPID(TObject* tObjectPtr,const VarHelper& varHelper,const EventHelper& evHelper)
   {
     LArPID* outputPtr=dynamic_cast<LArPID*>(tObjectPtr);
     if(!outputPtr){
       exit(1);
     }
+
+    const double MoliereRadius = 10.1;
+    const double MoliereRadiusFraction = 0.5;
+    const double trackFraction = 0.2;
+    const double pca_sp_check_threshold = 0.01;
+    const int min_pca_spacepoints = 25;
+    const double max_dEdx = 50.0;
+    const double min_trackpitch = 0.1;
 
     // Define the TPrincipal
     TPrincipal* principal = new TPrincipal(3,"D"); 
@@ -35,56 +43,242 @@ namespace lar_valrec{
      const TVectorD* eigenval = new TVectorD();
      const TMatrixD* eigenvec = new TMatrixD();
      const TMatrixD* covar = new TMatrixD();
+     const TVectorD* meanval = new TVectorD();
      const Double_t *hits_spacepoints = new Double_t[3];
-     Double_t* pca_hits_spacepoints = new Double_t[3];
-     TVector3* pca_hits_spacepoints_output = new TVector3();
+     Double_t* pca_spacepoints = new Double_t[3];
+     TVector3* pca_spacepoints_output = new TVector3();
+     double *pca_spacepoints_check = new double[3];
      std::vector<TVector3>* pca_hsp_cont = new std::vector<TVector3>;
      // LOOP OVER TRACKS
      //const TrackVector& TrackVector=evHelper.GetTracks();
      const TracksToHits& TracksToHits=evHelper.GetTracksToHits();
      const HitsToSpacePoints& hitsToSpacePoints=evHelper.GetHitsToSpacePoints();
+     const MCParticleVector& mcParticles=evHelper.GetMCParticles();
+     const TracksToCalo& tracksToCalo=evHelper.GetTracksToCalo();
 
-     // LOOP OVER TRACK TO HITS
-     for (auto tracks = (TracksToHits.begin()); tracks!=(TracksToHits.end()); tracks++)
+     calo::CalorimetryAlg CaloAlg(evHelper.GetParameterSet());
+
+     std::vector<double> pca_spacepoints_0;
+     std::vector<double>::iterator pcaIt;
+
+     //Loop over hits from first reconstructed track
+     if(TracksToHits.size() >= 1)
        {
-		// FILL SPACEPOINTS ARRAY WITH SPACEPOINTS BY LOOPING OVER ALL MATCHED HITS
-		for ( auto hits = (tracks->second).begin(); hits!=(tracks->second).end(); hits++ )
-		  {
-		    // CHECK FOR EXISTENCE OF KEY TO PREVENT MAP OVERRUN
-		    if(hitsToSpacePoints.count(*hits)) 
-		      {
-			TVector3 xyz=hitsToSpacePoints.at(*hits)->XYZ();
-			principal->AddRow( hitsToSpacePoints.at(*hits)->XYZ() );
-		      }
-		  }
+         auto tracks = TracksToHits.begin();
+
+	   // FILL SPACEPOINTS ARRAY WITH SPACEPOINTS BY LOOPING OVER ALL MATCHED HITS
+	   for ( auto hit = (tracks->second).begin(); hit!=(tracks->second).end(); hit++ )
+	      {
+	      // CHECK FOR EXISTENCE OF KEY TO PREVENT MAP OVERRUN
+	      if(hitsToSpacePoints.count(*hit)) 
+	        {
+		  TVector3 xyz=hitsToSpacePoints.at(*hit)->XYZ();
+		  principal->AddRow( hitsToSpacePoints.at(*hit)->XYZ() );
+		}
+	      }
 	// PERFORM PCA
 	principal->MakePrincipals();
 	// GET EIGENVALUES AND EIGENVECTORS
 	eigenval=principal->GetEigenValues();
 	eigenvec=principal->GetEigenVectors();
 	covar = principal->GetCovarianceMatrix();
-	// WRITE EIGENVECTORS AND EIGENVALUES TO NTUPLE
+        meanval=principal->GetMeanValues();
+
+	const double *eval = new double[3];
+        eval = eigenval->GetMatrixArray();
+	const double *evec = new double[9];
+        evec = eigenvec->GetMatrixArray();
+	const double *data_means = new double[3];
+        data_means = meanval->GetMatrixArray();
+
+	//Calculate angle between principal component and true direction of particle (validation check)
+	auto particle=mcParticles.begin();
+        double momNorm = sqrt((*particle)->Momentum().X() * (*particle)->Momentum().X()
+			      + (*particle)->Momentum().Y() * (*particle)->Momentum().Y()
+			      + (*particle)->Momentum().Z() * (*particle)->Momentum().Z());
+	//Angle is arccos of scalar product between principal component and (normalised) true direction of particle
+	double angleWithTrueParticle = acos((evec[0] * (*particle)->Momentum().X()
+                                             + evec[3] * (*particle)->Momentum().Y()
+                                             + evec[6] * (*particle)->Momentum().Z()) / momNorm);
+
+	std::cout<<"Angle between principal component and true direction of particle = "<<angleWithTrueParticle<<" rad"<<std::endl;
+
+	// WRITE TO NTUPLE
 	outputPtr->EigenValues.push_back(*eigenval);
 	outputPtr->EigenVectors.push_back(*eigenvec);
 	outputPtr->Covariance.push_back(*covar);
+	outputPtr->MeanValues.push_back(*meanval);
+        outputPtr->AnglePrincipalTrueTrack.push_back(angleWithTrueParticle);
+	outputPtr->EvalRatio.push_back(sqrt(eval[1] * eval[1] + eval[2] * eval[2]) / eval[0]);
+
+	double chargeCore = 0.0;
+	double chargeHalo = 0.0;
+
+	double chargeCon = 0.0;
+
+	pca_spacepoints_0.clear();
+
 	// *** ITERATE OVER THE HITS AGAIN TO CALCULATE THE NEW SPACEPOINTS UNDER PCA TRANSFORMATION ***
                 // FILL SPACEPOINTS ARRAY WITH SPACEPOINTS BY LOOPING OVER ALL MATCHED HITS     
-                for ( auto hits = (tracks->second).begin(); hits!=(tracks->second).end(); hits++ )
+                for ( auto hit = (tracks->second).begin(); hit!=(tracks->second).end(); hit++ )
                   {
                     // CHECK FOR EXISTENCE OF KEY TO PREVENT MAP OVERRUN                        
-                    if(hitsToSpacePoints.count(*hits)) {
+                    if(hitsToSpacePoints.count(*hit)) {
 		      // CALCULATE PCA ON SPACEPOINTS AND WRITE TO NTUPLE
-		      hits_spacepoints = hitsToSpacePoints.at(*hits)->XYZ();
-		      principal->X2P(hits_spacepoints,pca_hits_spacepoints);
-		      pca_hits_spacepoints_output->SetXYZ(pca_hits_spacepoints[0], pca_hits_spacepoints[1], pca_hits_spacepoints[2] );
-		      pca_hsp_cont->push_back(*pca_hits_spacepoints_output);	
+		      hits_spacepoints = hitsToSpacePoints.at(*hit)->XYZ();
+		      principal->X2P(hits_spacepoints,pca_spacepoints);
+		      pca_spacepoints_output->SetXYZ(pca_spacepoints[0], pca_spacepoints[1], pca_spacepoints[2] );
+		      pca_hsp_cont->push_back(*pca_spacepoints_output);
+
+		      pca_spacepoints_0.push_back(pca_spacepoints[0]);
+
+		      //Subtract means from hit spacepoints and multiply by transpose of matrix of eigenvectors 
+		      //This should agree with the PCA spacepoints calculated by TPrincipal (validation check)
+		      pca_spacepoints_check[0] = evec[0] * (hits_spacepoints[0] - data_means[0]) 
+			                       + evec[3] * (hits_spacepoints[1] - data_means[1])
+                                               + evec[6] * (hits_spacepoints[2] - data_means[2]);
+		      pca_spacepoints_check[1] = evec[1] * (hits_spacepoints[0] - data_means[0])
+			                       + evec[4] * (hits_spacepoints[1] - data_means[1])
+                                               + evec[7] * (hits_spacepoints[2] - data_means[2]);
+		      pca_spacepoints_check[2] = evec[2] * (hits_spacepoints[0] - data_means[0])
+			                       + evec[5] * (hits_spacepoints[1] - data_means[1])
+                                               + evec[8] * (hits_spacepoints[2] - data_means[2]);
+                      
+		      if(fabs(pca_spacepoints_check[0] - pca_spacepoints[0]) > pca_sp_check_threshold
+			 || fabs(pca_spacepoints_check[1] - pca_spacepoints[1]) > pca_sp_check_threshold	
+			 || fabs(pca_spacepoints_check[2] - pca_spacepoints[2]) > pca_sp_check_threshold)
+			{
+			  std::cerr<<"LArPIDCalculator::LArPIDPCA() PCA spacepoint validation check failed ...... exiting."<<std::endl;
+			  exit(1);
+			}
+
+		      if(sqrt(pca_spacepoints[1] * pca_spacepoints[1] + pca_spacepoints[2] * pca_spacepoints[2]) < MoliereRadiusFraction * MoliereRadius)
+			chargeCore += (*hit)->Integral();
+		      else
+			chargeHalo += (*hit)->Integral();
+
+                      chargeCon += (*hit)->Integral() / sqrt(pca_spacepoints[1] * pca_spacepoints[1] + pca_spacepoints[2] * pca_spacepoints[2]);
                     }
 		  }
+
 	outputPtr->PCAHitsSpacePoints.push_back(*pca_hsp_cont);
+	outputPtr->ChargeRatioCoreHalo.push_back(chargeHalo / chargeCore);
+	outputPtr->Concentration.push_back(chargeCon);
+
+	double trackPitchC = 1.0;
+
+	if(tracksToCalo.size() >= 1)
+          {
+  	  auto caloIt=tracksToCalo.begin();
+	  art::Ptr<anab::Calorimetry> calo=caloIt->second;
+	  trackPitchC = calo->TrkPitchC();
+	  }
+
+	double track_pca_start = 0.0;
+        double track_pca_end = 0.0;
+
+	if(pca_spacepoints_0.size() >= min_pca_spacepoints)
+	  { 
+	  sort(pca_spacepoints_0.begin(), pca_spacepoints_0.end());
+
+	  pcaIt = pca_spacepoints_0.begin();
+          track_pca_start = (*pcaIt);
+          pcaIt = pca_spacepoints_0.end()-1;
+	  track_pca_end = (*pcaIt);
+	  }
+
+	double dEdxAmpStart = 0.0;
+	double dEdxAmpEnd = 0.0;
+	double dEdxAreaStart = 0.0;
+	double dEdxAreaEnd = 0.0;
+
+	double stdDevStart = 0.0;
+        double stdDevEnd = 0.0;
+
+	int nhits_dEdx_amp_start = 0;
+        int nhits_dEdx_amp_end = 0;
+        int nhits_dEdx_area_start = 0;
+        int nhits_dEdx_area_end = 0;
+	int nhits_con_start = 0;
+        int nhits_con_end = 0;
+
+	//Loop over hits again to calculate average dE/dx and conicalness 
+	for ( auto hit = (tracks->second).begin(); hit!=(tracks->second).end(); hit++ )
+	  {
+	    if(hitsToSpacePoints.count(*hit)) {
+
+	      hits_spacepoints = hitsToSpacePoints.at(*hit)->XYZ();
+	      principal->X2P(hits_spacepoints,pca_spacepoints);
+
+	      if(pca_spacepoints_0.size() >= min_pca_spacepoints && pca_spacepoints[0] - track_pca_start < trackFraction * (track_pca_end - track_pca_start))
+		{
+		if(tracksToCalo.size() >= 1 && trackPitchC > min_trackpitch && CaloAlg.dEdx_AMP(*hit, trackPitchC, evHelper.GetEventT0()) < max_dEdx)
+		  {
+		  nhits_dEdx_amp_start++;
+		  dEdxAmpStart += CaloAlg.dEdx_AMP(*hit, trackPitchC, evHelper.GetEventT0());
+		  }
+		if(tracksToCalo.size() >= 1 && trackPitchC > min_trackpitch && CaloAlg.dEdx_AREA(*hit, trackPitchC, evHelper.GetEventT0()) < max_dEdx)
+		  {
+		  nhits_dEdx_area_start++;
+		  dEdxAreaStart += CaloAlg.dEdx_AREA(*hit, trackPitchC, evHelper.GetEventT0());
+		  }
+		nhits_con_start++;
+  		stdDevStart += pca_spacepoints[1] * pca_spacepoints[1] + pca_spacepoints[2] * pca_spacepoints[2];
+         	}
+	      if(pca_spacepoints_0.size() >= min_pca_spacepoints && track_pca_end - pca_spacepoints[0] < trackFraction * (track_pca_end - track_pca_start))
+		{
+		if(tracksToCalo.size() >= 1 && trackPitchC > min_trackpitch && CaloAlg.dEdx_AMP(*hit, trackPitchC, evHelper.GetEventT0()) < max_dEdx)
+		  {
+		  nhits_dEdx_amp_end++;
+		  dEdxAmpEnd += CaloAlg.dEdx_AMP(*hit, trackPitchC, evHelper.GetEventT0());
+		  }
+                if(tracksToCalo.size() >= 1 && trackPitchC > min_trackpitch && CaloAlg.dEdx_AREA(*hit, trackPitchC, evHelper.GetEventT0()) < max_dEdx)
+		  {
+		  nhits_dEdx_area_end++;
+                  dEdxAreaEnd += CaloAlg.dEdx_AREA(*hit, trackPitchC, evHelper.GetEventT0());
+		  }
+		nhits_con_end++;
+		stdDevEnd += pca_spacepoints[1] * pca_spacepoints[1] + pca_spacepoints[2] * pca_spacepoints[2];
+		}
+	    }
+	  }
+
+	if(tracksToCalo.size() >= 1 && pca_spacepoints_0.size() >= min_pca_spacepoints && trackPitchC > min_trackpitch && nhits_dEdx_amp_start >= 1)
+	  outputPtr->AvgedEdxAmpStart.push_back(dEdxAmpStart / nhits_dEdx_amp_start);
+	else
+	  outputPtr->AvgedEdxAmpStart.push_back(-999.9);
+
+	if(tracksToCalo.size() >= 1 && pca_spacepoints_0.size() >= min_pca_spacepoints && trackPitchC > min_trackpitch && nhits_dEdx_area_start >= 1)
+          outputPtr->AvgedEdxAreaStart.push_back(dEdxAreaStart / nhits_dEdx_area_start);
+        else
+          outputPtr->AvgedEdxAreaStart.push_back(-999.9);
+
+	if(tracksToCalo.size() >= 1 && pca_spacepoints_0.size() >= min_pca_spacepoints && trackPitchC > min_trackpitch && nhits_dEdx_amp_end >= 1)
+          outputPtr->AvgedEdxAmpEnd.push_back(dEdxAmpEnd / nhits_dEdx_amp_end);
+        else
+          outputPtr->AvgedEdxAmpEnd.push_back(-999.9);
+
+        if(tracksToCalo.size() >= 1 && pca_spacepoints_0.size() >= min_pca_spacepoints && trackPitchC > min_trackpitch && nhits_dEdx_area_end >= 1)
+          outputPtr->AvgedEdxAreaEnd.push_back(dEdxAreaEnd / nhits_dEdx_area_end);
+        else
+          outputPtr->AvgedEdxAreaEnd.push_back(-999.9);
+
+	if(pca_spacepoints_0.size() >= min_pca_spacepoints && nhits_con_start >= 2)
+	  stdDevStart = sqrt(stdDevStart / (nhits_con_start - 1));
+
+	if(pca_spacepoints_0.size() >= min_pca_spacepoints && nhits_con_end >= 2)
+	  stdDevEnd = sqrt(stdDevEnd / (nhits_con_end - 1));
+
+	if(pca_spacepoints_0.size() < min_pca_spacepoints || nhits_con_start <= 1 || nhits_con_end <= 1)
+          outputPtr->Conicalness.push_back(-999.9);
+	else
+	  outputPtr->Conicalness.push_back(stdDevStart / stdDevEnd);
+
 	// Clear the data from the TPrincipal
 	principal->Clear();
 		  
-       }
+       }//end of if(TracksToHits.size() >= 1) 
+
   }
 
   void LArPIDCalculator::Calculate(TObject* tObjectPtr,const VarHelper& varHelper,const EventHelper& evHelper){
@@ -94,12 +288,10 @@ namespace lar_valrec{
   }
   outputPtr->Clear();
   
-  // Call PCA Method
-  LArPIDPCA(tObjectPtr, varHelper, evHelper);
-
+  this->FillEventPID(tObjectPtr, varHelper, evHelper);
   this->FillEventMetadata(outputPtr,evHelper);
   this->FillEventMCTraj(outputPtr,evHelper);
-  this->FillEventdEdx(outputPtr,evHelper);
+  this->FillEventTracksAndHits(outputPtr,evHelper);
 
   }
 
@@ -238,22 +430,14 @@ namespace lar_valrec{
     
     }
   }
-  void LArPIDCalculator::FillEventdEdx(LArPID* outputPtr,const EventHelper& evHelper){
 
-    //CalorimetryAlg has art::ServiceHandle<geo::Geometry> geom as a private attribute.
-    //Please see http://nusoft.fnal.gov/larsoft/doxsvn/html/classcalo_1_1CalorimetryAlg.html.
-    //Looks as though you are meant to use it but tried calling it from public method and this did not compile.
-    //Therefore instantiate a Geometry object in order to get wire and plane pitches.
-    art::ServiceHandle<geo::Geometry> geom;
-
-    calo::CalorimetryAlg CaloAlg(evHelper.GetParameterSet());
+  void LArPIDCalculator::FillEventTracksAndHits(LArPID* outputPtr,const EventHelper& evHelper){
 
     const TrackVector& tracks=evHelper.GetTracks();
     const TracksToHits& tracksToHits=evHelper.GetTracksToHits();
     const HitsToSpacePoints& hitsToSpacePoints=evHelper.GetHitsToSpacePoints();
     const HitsToTracks& hitsToTracks=evHelper.GetHitsToTracks();
-
-    unsigned int planeLastHit = 0;
+    const TracksToCalo& tracksToCalo=evHelper.GetTracksToCalo();
 
     outputPtr->NHits=0;
     outputPtr->NTracks=0;
@@ -276,7 +460,7 @@ namespace lar_valrec{
       for(auto hit=tracksToHits.at(*track).begin();hit!=tracksToHits.at(*track).end();++hit)
         {
 	  ++(outputPtr->NHits);
-
+	  
 	  outputPtr->HitChannel.push_back((*hit)->Channel());
 	  outputPtr->HitCharge.push_back((*hit)->Integral());
 
@@ -291,27 +475,7 @@ namespace lar_valrec{
 	  outputPtr->HitPlane.push_back((*hit)->WireID().Plane);
 	  outputPtr->HitWire.push_back((*hit)->WireID().Wire);
 	  outputPtr->HitTPC.push_back((*hit)->WireID().TPC);
-	  
-          //geom->WirePitch() and geom->PlanePitch() are defined at http://nusoft.fnal.gov/larsoft/doxsvn/html.1.7.1/classgeo_1_1Geometry.html
-          //Use WirePitch() if next hit is in same plane, or PlanePitch() if it is in a different plane.
-          //First 2 arguments in WirePitch() are 0 and 1 to give pitch between 2 adjacent wires, third argument is wire plane, fourth argument is wire TPC.
-	  //Wire pitches agree with those given in DocDB 7550.
-          //First 2 arguments in PlanePitch() are the planes, third argument is the TPC. 
-	  if((*hit)->WireID().Plane == planeLastHit)
-	    {
-            outputPtr->HitdEdxAmp.push_back(CaloAlg.dEdx_AMP(*hit, geom->WirePitch(0,1,(*hit)->WireID().Plane, (*hit)->WireID().TPC), evHelper.GetEventT0()));
-	    outputPtr->HitdEdxArea.push_back(CaloAlg.dEdx_AREA(*hit, geom->WirePitch(0,1,(*hit)->WireID().Plane, (*hit)->WireID().TPC), evHelper.GetEventT0()));
-	    }
-          else if((*hit)->WireID().Plane < planeLastHit)
-	    {
-	      outputPtr->HitdEdxAmp.push_back(CaloAlg.dEdx_AMP(*hit, geom->PlanePitch((*hit)->WireID().Plane, planeLastHit, (*hit)->WireID().TPC), evHelper.GetEventT0()));
-	      outputPtr->HitdEdxArea.push_back(CaloAlg.dEdx_AREA(*hit, geom->PlanePitch((*hit)->WireID().Plane, planeLastHit, (*hit)->WireID().TPC), evHelper.GetEventT0()));
-	    }
-          else if((*hit)->WireID().Plane > planeLastHit)
-	    {
-	      outputPtr->HitdEdxAmp.push_back(CaloAlg.dEdx_AMP(*hit, geom->PlanePitch(planeLastHit, (*hit)->WireID().Plane, (*hit)->WireID().TPC), evHelper.GetEventT0()));
-	      outputPtr->HitdEdxArea.push_back(CaloAlg.dEdx_AREA(*hit, geom->PlanePitch(planeLastHit, (*hit)->WireID().Plane, (*hit)->WireID().TPC), evHelper.GetEventT0()));
-            }
+
 	  if(hitsToSpacePoints.count(*hit)&&hitsToSpacePoints.at(*hit).isNonnull())
             {
 	    outputPtr->Hit3Pos.push_back(TVector3(hitsToSpacePoints.at(*hit)->XYZ()));
@@ -323,12 +487,67 @@ namespace lar_valrec{
 	    outputPtr->HitIsMatched.push_back(false);
 	    }
 
-	  planeLastHit = (*hit)->WireID().Plane;
-
         }//end of for(auto hit=tracksToHits.at(*track).begin();hit!=tracksToHits.at(*track).end();++hit){
 
       }//end of for(auto track=tracks.begin();track!=tracks.end();++track){
 
-  }
 
-}
+    //std::cout<<"Tracks / tracksToCalo size    "<<tracks.size()<<"    "<<tracksToCalo.size()<<std::endl;
+ 
+    //for(auto iter=tracksToCalo.begin();iter!=tracksToCalo.end();++iter){
+    // art::Ptr<anab::Calorimetry> calo=iter->second;
+
+      /*
+      std::vector<double> vdEdx = calo->dEdx();
+      std::cout<<std::endl;
+      std::cout<<"LArPIDCalculator dE/dx"<<std::endl;
+      std::cout<<std::endl;
+      std::cout<<"vdedx size =    "<<vdEdx.size()<<"    "<<(double)vdEdx.size() / nhits<<std::endl;
+
+      for(auto dEdxIt= vdEdx.begin(); dEdxIt!=vdEdx.end(); ++dEdxIt)
+	std::cout<<"    "<<calo->PlaneID()<<"    "<<(*dEdxIt);
+
+      std::cout<<std::endl;
+      */
+      /*
+      std::vector<double> vResRange = calo->ResidualRange();
+      std::cout<<std::endl;
+      std::cout<<"vResRange size =    "<<vResRange.size()<<std::endl;
+      std::cout<<std::endl;
+
+      for(auto resRangeIt= vResRange.begin(); resRangeIt!=vResRange.end(); ++resRangeIt)
+	std::cout<<"    "<<calo->PlaneID()<<"    "<<(*resRangeIt);
+
+      std::cout<<std::endl;
+ 
+
+      std::vector<TVector3> vXYZ = calo->XYZ();
+      std::cout<<std::endl;
+      std::cout<<"vXYZ size =    "<<vXYZ.size()<<std::endl;
+      std::cout<<std::endl;
+
+      for(auto XYZIt= vXYZ.begin(); XYZIt!=vXYZ.end(); ++XYZIt)
+	std::cout<<"    "<<calo->PlaneID()<<"    "<<(*XYZIt)[0]<<"    "<<(*XYZIt)[1]<<"    "<<(*XYZIt)[2]<<std::endl;
+      */
+      /*
+      std::cout<<std::endl;
+      std::cout<<"Track pitch C = "<<calo->TrkPitchC()<<std::endl;
+      std::cout<<std::endl;
+      
+      std::vector<double> vTrkPitch = calo->TrkPitchVec();
+      std::cout<<std::endl;
+      std::cout<<"vTrkPitch size =    "<<vTrkPitch.size()<<std::endl;
+      std::cout<<std::endl;
+      */
+      /*
+      for(auto trkPitchIt= vTrkPitch.begin(); trkPitchIt!=vTrkPitch.end(); ++trkPitchIt)
+	std::cout<<"    "<<calo->PlaneID()<<"    "<<(*trkPitchIt);
+      */
+      //std::cout<<std::endl;
+   
+    //}
+    
+
+  }//end of void LArPIDCalculator::FillEventdEdx()
+
+}//end of namespace lar_valrec

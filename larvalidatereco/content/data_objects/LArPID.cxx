@@ -8,10 +8,19 @@ ClassImp(LArPID)
     EventID       =        kUnassigned;
     EventSubRun   =        kUnassigned;
 
-    EigenValues  .clear();
-    EigenVectors .clear();
-    Covariance   .clear();
-    PCAHitsSpacePoints .clear();
+    EigenValues            .clear();
+    EigenVectors           .clear();
+    Covariance             .clear();
+    AnglePrincipalTrueTrack.clear();
+    PCAHitsSpacePoints     .clear();
+    AvgedEdxAmpStart       .clear();
+    AvgedEdxAmpEnd         .clear();
+    AvgedEdxAreaStart      .clear();
+    AvgedEdxAreaEnd        .clear();
+    EvalRatio              .clear();
+    ChargeRatioCoreHalo    .clear();
+    Conicalness            .clear();
+    Concentration          .clear();
 
     NTracks=kUnassigned;
 
@@ -55,8 +64,8 @@ ClassImp(LArPID)
     HitTPC            .clear();
     Hit3Pos           .clear();
     HitIsMatched      .clear();
-    HitdEdxAmp        .clear();
-    HitdEdxArea       .clear();
+    //HitdEdxAmp        .clear();
+    //HitdEdxArea       .clear();
   }
 
   LArPID::LArPID():kUnassigned(0xDEADBEEF){this->Clear();}

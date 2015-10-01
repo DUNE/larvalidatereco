@@ -23,6 +23,8 @@ namespace lar_valrec{
     virtual ~LArPIDCalculator(){}
 
     bool IsInActiveRegion(const TVector3& position);
+
+    void FillEventPID(TObject* tObjectPtr,const VarHelper& varHelper,const EventHelper& evHelper);
  
     double GetTrackLength(std::vector<TVector3>& points,int trackIndex);
 
@@ -30,7 +32,7 @@ namespace lar_valrec{
 
     void FillEventMCTraj(LArPID* outputPtr,const EventHelper& evHelper);
 
-    void FillEventdEdx(LArPID* outputPtr,const EventHelper& evHelper);
+    void FillEventTracksAndHits(LArPID* outputPtr,const EventHelper& evHelper);
 
   private:
   };
