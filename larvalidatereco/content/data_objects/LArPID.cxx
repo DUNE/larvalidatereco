@@ -13,6 +13,7 @@ ClassImp(LArPID)
     Covariance             .clear();
     AnglePrincipalTrueTrack.clear();
     PCAHitsSpacePoints     .clear();
+    StdDevDistFromPA       .clear();
     AvgedEdxAmpStart       .clear();
     AvgedEdxAmpEnd         .clear();
     AvgedEdxAreaStart      .clear();
@@ -21,6 +22,10 @@ ClassImp(LArPID)
     ChargeRatioCoreHalo    .clear();
     Conicalness            .clear();
     Concentration          .clear();
+    ChargeLongRatio        .clear();
+    ChargeLongRatioHalf    .clear();
+    ChargeEndRatio         .clear();
+    ChargeEndRatio10       .clear();
 
     NTracks=kUnassigned;
 

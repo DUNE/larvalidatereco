@@ -30,12 +30,16 @@ namespace lar_valrec{
     }
 
     const double MoliereRadius = 10.1;
-    const double MoliereRadiusFraction = 0.5;
-    const double trackFraction = 0.2;
+    const double MoliereRadiusFraction = 0.1;
+    const double dEdxTrackFraction = 0.2;
+    const double chargeTrackFraction = 0.2;
     const double pca_sp_check_threshold = 0.01;
-    const int min_pca_spacepoints = 25;
+    const int min_pca_spacepoints = 30;
     const double max_dEdx = 50.0;
     const double min_trackpitch = 0.1;
+    const double max_trackpitch = 5.0;
+    const double min_chargecore = 10.0;    
+    const double min_dist_from_pa = 0.01;
 
     // Define the TPrincipal
     TPrincipal* principal = new TPrincipal(3,"D"); 
@@ -118,6 +122,12 @@ namespace lar_valrec{
 
 	pca_spacepoints_0.clear();
 
+	std::cout<<"Eigenvalues    "<<eval[0]<<"    "<<eval[1]<<"    "<<eval[2]<<std::endl;
+	std::cout<<std::endl;
+
+	double stdDevDist = 0.0;
+	int nhits = 0;
+
 	// *** ITERATE OVER THE HITS AGAIN TO CALCULATE THE NEW SPACEPOINTS UNDER PCA TRANSFORMATION ***
                 // FILL SPACEPOINTS ARRAY WITH SPACEPOINTS BY LOOPING OVER ALL MATCHED HITS     
                 for ( auto hit = (tracks->second).begin(); hit!=(tracks->second).end(); hit++ )
@@ -157,15 +167,26 @@ namespace lar_valrec{
 		      else
 			chargeHalo += (*hit)->Integral();
 
-                      chargeCon += (*hit)->Integral() / sqrt(pca_spacepoints[1] * pca_spacepoints[1] + pca_spacepoints[2] * pca_spacepoints[2]);
+		      //std::cout<<pca_spacepoints[0]<<"    "<<sqrt(pca_spacepoints[1] * pca_spacepoints[1] + pca_spacepoints[2] * pca_spacepoints[2])<<std::endl;
+		      stdDevDist += pca_spacepoints[1] * pca_spacepoints[1] + pca_spacepoints[2] * pca_spacepoints[2];
+		      nhits++;
+
+                      chargeCon += (*hit)->Integral() / TMath::Max(min_dist_from_pa, sqrt(pca_spacepoints[1] * pca_spacepoints[1] + pca_spacepoints[2] * pca_spacepoints[2]));
                     }
 		  }
 
+        if(nhits >= 2)
+	  outputPtr->StdDevDistFromPA.push_back(sqrt(stdDevDist / (nhits-1)));
+	else
+	  outputPtr->StdDevDistFromPA.push_back(0.0);
 	outputPtr->PCAHitsSpacePoints.push_back(*pca_hsp_cont);
-	outputPtr->ChargeRatioCoreHalo.push_back(chargeHalo / chargeCore);
+	if(chargeCore < min_chargecore)
+	  outputPtr->ChargeRatioCoreHalo.push_back(1.0);
+	else
+	  outputPtr->ChargeRatioCoreHalo.push_back(chargeHalo / chargeCore);
 	outputPtr->Concentration.push_back(chargeCon);
 
-	double trackPitchC = 1.0;
+	double trackPitchC = 0.45;
 
 	if(tracksToCalo.size() >= 1)
           {
@@ -202,7 +223,15 @@ namespace lar_valrec{
 	int nhits_con_start = 0;
         int nhits_con_end = 0;
 
-	//Loop over hits again to calculate average dE/dx and conicalness 
+        double chargeStart = 0.0;
+        double chargeEnd = 0.0;
+	double chargeFirstHalf = 0.0;
+	double chargeSecondHalf = 0.0;
+        double chargePenultimate = 0.0;
+	double chargeEnd10 = 0.0;
+        double chargePenultimate10 = 0.0;
+
+	//Loop over hits again to calculate average dE/dx, longitudinal shape variables and conicalness 
 	for ( auto hit = (tracks->second).begin(); hit!=(tracks->second).end(); hit++ )
 	  {
 	    if(hitsToSpacePoints.count(*hit)) {
@@ -210,14 +239,16 @@ namespace lar_valrec{
 	      hits_spacepoints = hitsToSpacePoints.at(*hit)->XYZ();
 	      principal->X2P(hits_spacepoints,pca_spacepoints);
 
-	      if(pca_spacepoints_0.size() >= min_pca_spacepoints && pca_spacepoints[0] - track_pca_start < trackFraction * (track_pca_end - track_pca_start))
+	      if(pca_spacepoints_0.size() >= min_pca_spacepoints && pca_spacepoints[0] - track_pca_start < dEdxTrackFraction * (track_pca_end - track_pca_start))
 		{
-		if(tracksToCalo.size() >= 1 && trackPitchC > min_trackpitch && CaloAlg.dEdx_AMP(*hit, trackPitchC, evHelper.GetEventT0()) < max_dEdx)
+		if(tracksToCalo.size() >= 1 && trackPitchC > min_trackpitch && trackPitchC < max_trackpitch && (*hit)->WireID().Plane == 2 
+                   && CaloAlg.dEdx_AMP(*hit, trackPitchC, evHelper.GetEventT0()) < max_dEdx)
 		  {
 		  nhits_dEdx_amp_start++;
 		  dEdxAmpStart += CaloAlg.dEdx_AMP(*hit, trackPitchC, evHelper.GetEventT0());
 		  }
-		if(tracksToCalo.size() >= 1 && trackPitchC > min_trackpitch && CaloAlg.dEdx_AREA(*hit, trackPitchC, evHelper.GetEventT0()) < max_dEdx)
+		if(tracksToCalo.size() >= 1 && trackPitchC > min_trackpitch && trackPitchC < max_trackpitch && (*hit)->WireID().Plane == 2 
+                   && CaloAlg.dEdx_AREA(*hit, trackPitchC, evHelper.GetEventT0()) < max_dEdx)
 		  {
 		  nhits_dEdx_area_start++;
 		  dEdxAreaStart += CaloAlg.dEdx_AREA(*hit, trackPitchC, evHelper.GetEventT0());
@@ -225,14 +256,16 @@ namespace lar_valrec{
 		nhits_con_start++;
   		stdDevStart += pca_spacepoints[1] * pca_spacepoints[1] + pca_spacepoints[2] * pca_spacepoints[2];
          	}
-	      if(pca_spacepoints_0.size() >= min_pca_spacepoints && track_pca_end - pca_spacepoints[0] < trackFraction * (track_pca_end - track_pca_start))
+	      if(pca_spacepoints_0.size() >= min_pca_spacepoints && track_pca_end - pca_spacepoints[0] < dEdxTrackFraction * (track_pca_end - track_pca_start))
 		{
-		if(tracksToCalo.size() >= 1 && trackPitchC > min_trackpitch && CaloAlg.dEdx_AMP(*hit, trackPitchC, evHelper.GetEventT0()) < max_dEdx)
+		if(tracksToCalo.size() >= 1 && trackPitchC > min_trackpitch && trackPitchC < max_trackpitch && (*hit)->WireID().Plane == 2 
+                  && CaloAlg.dEdx_AMP(*hit, trackPitchC, evHelper.GetEventT0()) < max_dEdx)
 		  {
 		  nhits_dEdx_amp_end++;
 		  dEdxAmpEnd += CaloAlg.dEdx_AMP(*hit, trackPitchC, evHelper.GetEventT0());
 		  }
-                if(tracksToCalo.size() >= 1 && trackPitchC > min_trackpitch && CaloAlg.dEdx_AREA(*hit, trackPitchC, evHelper.GetEventT0()) < max_dEdx)
+                if(tracksToCalo.size() >= 1 && trackPitchC > min_trackpitch && trackPitchC < max_trackpitch && (*hit)->WireID().Plane == 2 
+                  && CaloAlg.dEdx_AREA(*hit, trackPitchC, evHelper.GetEventT0()) < max_dEdx)
 		  {
 		  nhits_dEdx_area_end++;
                   dEdxAreaEnd += CaloAlg.dEdx_AREA(*hit, trackPitchC, evHelper.GetEventT0());
@@ -240,28 +273,51 @@ namespace lar_valrec{
 		nhits_con_end++;
 		stdDevEnd += pca_spacepoints[1] * pca_spacepoints[1] + pca_spacepoints[2] * pca_spacepoints[2];
 		}
+
+	      if(pca_spacepoints_0.size() >= min_pca_spacepoints)
+                {
+		  if(pca_spacepoints[0] - track_pca_start < chargeTrackFraction * (track_pca_end - track_pca_start))
+		    chargeStart += (*hit)->Integral();
+		  if(track_pca_end - pca_spacepoints[0] < chargeTrackFraction * (track_pca_end - track_pca_start))
+		    chargeEnd += (*hit)->Integral();
+                  if(pca_spacepoints[0] - track_pca_start < 0.5 * (track_pca_end - track_pca_start))
+		    chargeFirstHalf += (*hit)->Integral();
+		  if(track_pca_end - pca_spacepoints[0] < 0.5 * (track_pca_end - track_pca_start))
+                    chargeSecondHalf += (*hit)->Integral();
+
+		  if(track_pca_end - pca_spacepoints[0] > chargeTrackFraction * (track_pca_end - track_pca_start)
+		     && track_pca_end - pca_spacepoints[0] < 2.0 * chargeTrackFraction * (track_pca_end - track_pca_start))
+                    chargePenultimate += (*hit)->Integral();
+
+		  if(track_pca_end - pca_spacepoints[0] < 0.1 * (track_pca_end - track_pca_start))
+                    chargeEnd10 += (*hit)->Integral();
+                  if(track_pca_end - pca_spacepoints[0] > 0.1 * (track_pca_end - track_pca_start)
+                     && track_pca_end - pca_spacepoints[0] < 0.2 * (track_pca_end - track_pca_start))
+                    chargePenultimate10 += (*hit)->Integral();
+		}
+
 	    }
 	  }
 
 	if(tracksToCalo.size() >= 1 && pca_spacepoints_0.size() >= min_pca_spacepoints && trackPitchC > min_trackpitch && nhits_dEdx_amp_start >= 1)
 	  outputPtr->AvgedEdxAmpStart.push_back(dEdxAmpStart / nhits_dEdx_amp_start);
 	else
-	  outputPtr->AvgedEdxAmpStart.push_back(-999.9);
+	  outputPtr->AvgedEdxAmpStart.push_back(0.0);
 
 	if(tracksToCalo.size() >= 1 && pca_spacepoints_0.size() >= min_pca_spacepoints && trackPitchC > min_trackpitch && nhits_dEdx_area_start >= 1)
           outputPtr->AvgedEdxAreaStart.push_back(dEdxAreaStart / nhits_dEdx_area_start);
         else
-          outputPtr->AvgedEdxAreaStart.push_back(-999.9);
+          outputPtr->AvgedEdxAreaStart.push_back(0.0);
 
 	if(tracksToCalo.size() >= 1 && pca_spacepoints_0.size() >= min_pca_spacepoints && trackPitchC > min_trackpitch && nhits_dEdx_amp_end >= 1)
           outputPtr->AvgedEdxAmpEnd.push_back(dEdxAmpEnd / nhits_dEdx_amp_end);
         else
-          outputPtr->AvgedEdxAmpEnd.push_back(-999.9);
+          outputPtr->AvgedEdxAmpEnd.push_back(0.0);
 
         if(tracksToCalo.size() >= 1 && pca_spacepoints_0.size() >= min_pca_spacepoints && trackPitchC > min_trackpitch && nhits_dEdx_area_end >= 1)
           outputPtr->AvgedEdxAreaEnd.push_back(dEdxAreaEnd / nhits_dEdx_area_end);
         else
-          outputPtr->AvgedEdxAreaEnd.push_back(-999.9);
+          outputPtr->AvgedEdxAreaEnd.push_back(0.0);
 
 	if(pca_spacepoints_0.size() >= min_pca_spacepoints && nhits_con_start >= 2)
 	  stdDevStart = sqrt(stdDevStart / (nhits_con_start - 1));
@@ -270,9 +326,36 @@ namespace lar_valrec{
 	  stdDevEnd = sqrt(stdDevEnd / (nhits_con_end - 1));
 
 	if(pca_spacepoints_0.size() < min_pca_spacepoints || nhits_con_start <= 1 || nhits_con_end <= 1)
-          outputPtr->Conicalness.push_back(-999.9);
+          outputPtr->Conicalness.push_back(1.0);
 	else
-	  outputPtr->Conicalness.push_back(stdDevStart / stdDevEnd);
+	  outputPtr->Conicalness.push_back(stdDevEnd / stdDevStart);
+
+	if(pca_spacepoints_0.size() < min_pca_spacepoints)
+	  {
+	  outputPtr->ChargeLongRatio.push_back(1.0);
+	  outputPtr->ChargeLongRatioHalf.push_back(1.0);
+	  outputPtr->ChargeEndRatio.push_back(1.0);
+	  outputPtr->ChargeEndRatio10.push_back(1.0);
+	  }
+	else
+	  {
+	  if(chargeStart == 0.0)
+	    outputPtr->ChargeLongRatio.push_back(1.0);
+	  else
+	    outputPtr->ChargeLongRatio.push_back(chargeEnd / chargeStart);
+	  if(chargeFirstHalf == 0.0)
+	    outputPtr->ChargeLongRatioHalf.push_back(1.0);
+	  else
+            outputPtr->ChargeLongRatioHalf.push_back(chargeSecondHalf / chargeFirstHalf);
+	  if(chargePenultimate == 0.0)
+	    outputPtr->ChargeEndRatio.push_back(1.0);
+	  else
+            outputPtr->ChargeEndRatio.push_back(chargeEnd / chargePenultimate);
+	  if(chargePenultimate10 == 0.0)
+	    outputPtr->ChargeEndRatio10.push_back(1.0);
+	  else
+            outputPtr->ChargeEndRatio10.push_back(chargeEnd10 / chargePenultimate10);
+	  }
 
 	// Clear the data from the TPrincipal
 	principal->Clear();

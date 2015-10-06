@@ -86,6 +86,7 @@ public:
   std::vector<TVectorD> MeanValues;
   std::vector<double>   AnglePrincipalTrueTrack;
   std::vector<std::vector<TVector3>> PCAHitsSpacePoints;
+  std::vector<double>   StdDevDistFromPA;
   std::vector<double>   AvgedEdxAmpStart;
   std::vector<double>   AvgedEdxAmpEnd;
   std::vector<double>   AvgedEdxAreaStart;
@@ -94,6 +95,10 @@ public:
   std::vector<double>   ChargeRatioCoreHalo;
   std::vector<double>   Conicalness;
   std::vector<double>   Concentration;
+  std::vector<double>   ChargeLongRatio;
+  std::vector<double>   ChargeLongRatioHalf;
+  std::vector<double>   ChargeEndRatio;
+  std::vector<double>   ChargeEndRatio10;
 
   ///
   /// Reset parameter values and vector containers
