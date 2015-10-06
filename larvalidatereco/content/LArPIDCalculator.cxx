@@ -299,22 +299,22 @@ namespace lar_valrec{
 	    }
 	  }
 
-	if(tracksToCalo.size() >= 1 && pca_spacepoints_0.size() >= min_pca_spacepoints && trackPitchC > min_trackpitch && nhits_dEdx_amp_start >= 1)
+	if(tracksToCalo.size() >= 1 && pca_spacepoints_0.size() >= min_pca_spacepoints && nhits_dEdx_amp_start >= 1)
 	  outputPtr->AvgedEdxAmpStart.push_back(dEdxAmpStart / nhits_dEdx_amp_start);
 	else
 	  outputPtr->AvgedEdxAmpStart.push_back(0.0);
 
-	if(tracksToCalo.size() >= 1 && pca_spacepoints_0.size() >= min_pca_spacepoints && trackPitchC > min_trackpitch && nhits_dEdx_area_start >= 1)
+	if(tracksToCalo.size() >= 1 && pca_spacepoints_0.size() >= min_pca_spacepoints && nhits_dEdx_area_start >= 1)
           outputPtr->AvgedEdxAreaStart.push_back(dEdxAreaStart / nhits_dEdx_area_start);
         else
           outputPtr->AvgedEdxAreaStart.push_back(0.0);
 
-	if(tracksToCalo.size() >= 1 && pca_spacepoints_0.size() >= min_pca_spacepoints && trackPitchC > min_trackpitch && nhits_dEdx_amp_end >= 1)
+	if(tracksToCalo.size() >= 1 && pca_spacepoints_0.size() >= min_pca_spacepoints && nhits_dEdx_amp_end >= 1)
           outputPtr->AvgedEdxAmpEnd.push_back(dEdxAmpEnd / nhits_dEdx_amp_end);
         else
           outputPtr->AvgedEdxAmpEnd.push_back(0.0);
 
-        if(tracksToCalo.size() >= 1 && pca_spacepoints_0.size() >= min_pca_spacepoints && trackPitchC > min_trackpitch && nhits_dEdx_area_end >= 1)
+        if(tracksToCalo.size() >= 1 && pca_spacepoints_0.size() >= min_pca_spacepoints && nhits_dEdx_area_end >= 1)
           outputPtr->AvgedEdxAreaEnd.push_back(dEdxAreaEnd / nhits_dEdx_area_end);
         else
           outputPtr->AvgedEdxAreaEnd.push_back(0.0);
