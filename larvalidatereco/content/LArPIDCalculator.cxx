@@ -28,11 +28,23 @@ namespace lar_valrec{
     if(!outputPtr){
       exit(1);
     }
+   
+    //Active volume of 35 ton detector taken from slide 8 in talk by Tristan Blackburn on 19 August 2015, slides are at 
+    //https://indico.fnal.gov/getFile.py/access?contribId=4&resId=0&materialId=slides&confId=10284
+    const double activeVolMinX = -35.18;
+    const double activeVolMaxX = 222.46;
+    const double activeVolMinY = -84.22;
+    const double activeVolMaxY = 115.09;
+    const double activeVolMinZ = -2.04;
+    const double activeVolMaxZ = 156.78;
+    //Allow a few cm since last hit will not be exactly at edge of active volume
+    const double fiducialDist = 4.0;
 
     const double MoliereRadius = 10.1;
-    const double MoliereRadiusFraction = 0.1;
+    const double MoliereRadiusFraction = 0.2;
     const double dEdxTrackFraction = 0.2;
     const double chargeTrackFraction = 0.2;
+    const double coreHaloFraction = 0.2;
     const double pca_sp_check_threshold = 0.01;
     const int min_pca_spacepoints = 30;
     const double max_dEdx = 50.0;
@@ -97,16 +109,23 @@ namespace lar_valrec{
 
 	//Calculate angle between principal component and true direction of particle (validation check)
 	auto particle=mcParticles.begin();
-        double momNorm = sqrt((*particle)->Momentum().X() * (*particle)->Momentum().X()
+        double startMomNorm = sqrt((*particle)->Momentum().X() * (*particle)->Momentum().X()
 			      + (*particle)->Momentum().Y() * (*particle)->Momentum().Y()
 			      + (*particle)->Momentum().Z() * (*particle)->Momentum().Z());
 	//Angle is arccos of scalar product between principal component and (normalised) true direction of particle
 	double angleWithTrueParticle = acos((evec[0] * (*particle)->Momentum().X()
                                              + evec[3] * (*particle)->Momentum().Y()
-                                             + evec[6] * (*particle)->Momentum().Z()) / momNorm);
+                                             + evec[6] * (*particle)->Momentum().Z()) / startMomNorm);
 
-	std::cout<<"Angle between principal component and true direction of particle = "<<angleWithTrueParticle<<" rad"<<std::endl;
+	std::cout<<"Angle between principal component and true start momentum of particle = "<<angleWithTrueParticle<<" rad"<<std::endl;
 
+        if((*particle)->EndPosition().X() > (activeVolMinX + fiducialDist) && (*particle)->EndPosition().X() < (activeVolMaxX - fiducialDist)
+	   && (*particle)->EndPosition().Y() > (activeVolMinY + fiducialDist) && (*particle)->EndPosition().Y() < (activeVolMaxY - fiducialDist)
+	   && (*particle)->EndPosition().Z() > (activeVolMinZ + fiducialDist) && (*particle)->EndPosition().Z() < (activeVolMaxZ - fiducialDist))
+	  outputPtr->IsStoppingTrue = true;
+	else
+	  outputPtr->IsStoppingTrue = false;
+	
 	// WRITE TO NTUPLE
 	outputPtr->EigenValues.push_back(*eigenval);
 	outputPtr->EigenVectors.push_back(*eigenvec);
@@ -223,6 +242,11 @@ namespace lar_valrec{
 	int nhits_con_start = 0;
         int nhits_con_end = 0;
 
+	double chargeCoreStart = 0.0;
+        double chargeCoreEnd = 0.0;
+        double chargeHaloStart = 0.0;
+        double chargeHaloEnd = 0.0;
+
         double chargeStart = 0.0;
         double chargeEnd = 0.0;
 	double chargeFirstHalf = 0.0;
@@ -276,6 +300,22 @@ namespace lar_valrec{
 
 	      if(pca_spacepoints_0.size() >= min_pca_spacepoints)
                 {
+		  if(pca_spacepoints[0] - track_pca_start < coreHaloFraction * (track_pca_end - track_pca_start))
+		    {
+		    if(sqrt(pca_spacepoints[1] * pca_spacepoints[1] + pca_spacepoints[2] * pca_spacepoints[2]) < MoliereRadiusFraction * MoliereRadius)
+		      chargeCoreStart += (*hit)->Integral();
+		    else
+		      chargeHaloStart += (*hit)->Integral();
+		    }
+
+		  if(track_pca_end - pca_spacepoints[0] < coreHaloFraction * (track_pca_end - track_pca_start))
+		    {
+		    if(sqrt(pca_spacepoints[1] * pca_spacepoints[1] + pca_spacepoints[2] * pca_spacepoints[2]) < MoliereRadiusFraction * MoliereRadius)
+		      chargeCoreEnd += (*hit)->Integral();
+		    else
+		      chargeHaloEnd += (*hit)->Integral();
+		    }
+
 		  if(pca_spacepoints[0] - track_pca_start < chargeTrackFraction * (track_pca_end - track_pca_start))
 		    chargeStart += (*hit)->Integral();
 		  if(track_pca_end - pca_spacepoints[0] < chargeTrackFraction * (track_pca_end - track_pca_start))
@@ -294,6 +334,18 @@ namespace lar_valrec{
                   if(track_pca_end - pca_spacepoints[0] > 0.1 * (track_pca_end - track_pca_start)
                      && track_pca_end - pca_spacepoints[0] < 0.2 * (track_pca_end - track_pca_start))
                     chargePenultimate10 += (*hit)->Integral();
+
+		  if(pca_spacepoints[0] == track_pca_end)
+		    {
+		      if(hits_spacepoints[0] > (activeVolMinX + fiducialDist) && hits_spacepoints[0] < (activeVolMaxX - fiducialDist)
+			 && hits_spacepoints[1] > (activeVolMinY + fiducialDist) && hits_spacepoints[1] < (activeVolMaxY - fiducialDist)
+			 && hits_spacepoints[2] > (activeVolMinZ + fiducialDist) && hits_spacepoints[2] < (activeVolMaxZ - fiducialDist))
+			outputPtr->IsStoppingReco = true;
+		      else
+			outputPtr->IsStoppingReco = false;
+		    }
+
+
 		}
 
 	    }

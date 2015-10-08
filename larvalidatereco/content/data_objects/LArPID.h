@@ -79,7 +79,9 @@ public:
   std::vector<bool>            HitIsMatched;          ///< whether hit has a valid 3D position [NHits]
   //std::vector<double>          HitdEdxAmp;            ///< dE/dx using hit amplitude         [NHits]
   //std::vector<double>          HitdEdxArea;           ///< dE/dx using hit area              [NHits]
-  
+
+  bool                  IsStoppingTrue;
+  bool                  IsStoppingReco;  
   std::vector<TVectorD> EigenValues;
   std::vector<TMatrixD> EigenVectors;
   std::vector<TMatrixD> Covariance;

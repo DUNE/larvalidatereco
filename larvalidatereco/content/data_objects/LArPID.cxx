@@ -8,24 +8,26 @@ ClassImp(LArPID)
     EventID       =        kUnassigned;
     EventSubRun   =        kUnassigned;
 
-    EigenValues            .clear();
-    EigenVectors           .clear();
-    Covariance             .clear();
-    AnglePrincipalTrueTrack.clear();
-    PCAHitsSpacePoints     .clear();
-    StdDevDistFromPA       .clear();
-    AvgedEdxAmpStart       .clear();
-    AvgedEdxAmpEnd         .clear();
-    AvgedEdxAreaStart      .clear();
-    AvgedEdxAreaEnd        .clear();
-    EvalRatio              .clear();
-    ChargeRatioCoreHalo    .clear();
-    Conicalness            .clear();
-    Concentration          .clear();
-    ChargeLongRatio        .clear();
-    ChargeLongRatioHalf    .clear();
-    ChargeEndRatio         .clear();
-    ChargeEndRatio10       .clear();
+    IsStoppingTrue=        kUnassigned;
+    IsStoppingReco=        kUnassigned;
+    EigenValues             .clear();
+    EigenVectors            .clear();
+    Covariance              .clear();
+    AnglePrincipalTrueTrack .clear();
+    PCAHitsSpacePoints      .clear();
+    StdDevDistFromPA        .clear();
+    AvgedEdxAmpStart        .clear();
+    AvgedEdxAmpEnd          .clear();
+    AvgedEdxAreaStart       .clear();
+    AvgedEdxAreaEnd         .clear();
+    EvalRatio               .clear();
+    ChargeRatioCoreHalo     .clear();
+    Conicalness             .clear();
+    Concentration           .clear();
+    ChargeLongRatio         .clear();
+    ChargeLongRatioHalf     .clear();
+    ChargeEndRatio          .clear();
+    ChargeEndRatio10        .clear();
 
     NTracks=kUnassigned;
 
