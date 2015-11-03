@@ -30,12 +30,12 @@ namespace lar_valrec{
 
     double CalcDistSqPointLine(const TVector3& point, const TVector3& linePoint, const TVector3& lineDirection);
 
-    //TVector3 CalcNearestPointOnLine(const TVector3& point, const TVector3& linePoint, const TVector3& lineDirection);
     TVector3 CalcNearestPointOnLine(const TVector3& point);
 
     double CalcResRangeFraction(const TVector3& point, const TVector3& trackStart, const TVector3& trackEnd);
  
-    int FitTrack(TGraph2D *gHitsSpacepoints);
+    //int FitTrack(TGraph2D *gHitsSpacepoints);
+    int FitTrack(TH1D *hHitsSpacepoints);
 
     double GetTrackLength(std::vector<TVector3>& points,int trackIndex);
 

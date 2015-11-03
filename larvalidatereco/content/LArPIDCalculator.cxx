@@ -78,6 +78,7 @@ namespace lar_valrec{
      TVector3* pca_spacepoints_output = new TVector3();
      double *pca_spacepoints_check = new double[3];
      std::vector<TVector3>* pca_hsp_cont = new std::vector<TVector3>;
+
      // LOOP OVER TRACKS
      const TrackVector& tracks=evHelper.GetTracks();
      const TracksToHits& tracksToHits=evHelper.GetTracksToHits();
@@ -104,7 +105,7 @@ namespace lar_valrec{
 	   }
 	 trackIndex++;
        }
- 
+
      if(tracksToHits.size() >= trackMaxHits + 1)
        {          
        auto track=tracks.begin();
@@ -205,7 +206,7 @@ namespace lar_valrec{
         outputPtr->AnglePATrueTrack.push_back(angleWithTrueParticle);
 	outputPtr->EvalRatio.push_back(sqrt(eval[1] * eval[1] + eval[2] * eval[2]) / eval[0]);
 
-	TGraph2D *gHitsSpacepoints = new TGraph2D(nhits);
+	TH1D *hHitsSpacepoints = new TH1D("hHitsSpacepoints", "", 3 * nhits, 0.0, 3.0 * nhits);
 
 	int spacept = 0;
 
@@ -222,10 +223,8 @@ namespace lar_valrec{
 		      pca_spacepoints_output->SetXYZ(pca_spacepoints[0], pca_spacepoints[1], pca_spacepoints[2] );
 		      pca_hsp_cont->push_back(*pca_spacepoints_output);
 
-
-		      gHitsSpacepoints->SetPoint(spacept, hits_spacepoints[0], hits_spacepoints[1], hits_spacepoints[2]);
-
-		      //pca_spacepoints_0.push_back(pca_spacepoints[0]);
+		      for(int i=0; i<3; i++)
+		        hHitsSpacepoints->SetBinContent(3*spacept+i+1, hits_spacepoints[i]);
 
 		      //Subtract means from hit spacepoints and multiply by transpose of matrix of eigenvectors 
 		      //This should agree with the PCA spacepoints calculated by TPrincipal (validation check)
@@ -253,9 +252,12 @@ namespace lar_valrec{
 
 	outputPtr->PCAHitsSpacePoints.push_back(*pca_hsp_cont);
 
-	//Fit line to track by minimising sum of squared residuals between hits and fitted line
-	int status = this->FitTrack(gHitsSpacepoints);
-	
+	//Fit line to track by minimising sum of squared residuals between hits and fitted line.
+	//It would be more logical to put the hit spacepoints into a TGraph2D and pass that to the fit method.
+	//However I tried this and it gave memory issues in the function CalcSumSqResidual().
+	//For this reason, I put the spacepoints into a TH1D using SetBinContent() and pass that to the fit method.
+	int status = this->FitTrack(hHitsSpacepoints);
+
 	std::cout<<"Fit status = "<<status<<std::endl;
 
 	trackFitMade = true;
@@ -269,7 +271,7 @@ namespace lar_valrec{
 	//Calculate nearest points to reconstructed start and end of track on line fitted to track
 	TVector3 nearestPointStart = this->CalcNearestPointOnLine(recoTrackStart);
         TVector3 nearestPointEnd = this->CalcNearestPointOnLine(recoTrackEnd);
-	
+
 	double yzPitch, xComponent;
         double pitch3D = 0.45;
 
@@ -569,8 +571,7 @@ namespace lar_valrec{
             outputPtr->ChargeEndRatio10.push_back(chargeEnd10 / chargePenultimate10);
 	  }
 
-
-	delete gHitsSpacepoints;
+	delete hHitsSpacepoints;
 
        }//end of if(tracksToHits.size() >= 1) 
 
@@ -605,7 +606,6 @@ namespace lar_valrec{
     return distanceSq;    
   }
 
-  //TVector3 LArPIDCalculator::CalcNearestPointOnLine(const TVector3& point, const TVector3& linePoint, const TVector3& lineDirection)
  TVector3 LArPIDCalculator::CalcNearestPointOnLine(const TVector3& point)
   {
 
@@ -646,7 +646,8 @@ namespace lar_valrec{
     return resRangeFraction;
   }
   
-  int LArPIDCalculator::FitTrack(TGraph2D *gHitsSpacepoints)
+  //int LArPIDCalculator::FitTrack(TGraph2D *gHitsSpacepoints)
+  int LArPIDCalculator::FitTrack(TH1D *hHitsSpacepoints)
   {
 
     const int nparams = 6;
@@ -655,7 +656,7 @@ namespace lar_valrec{
     TVirtualFitter * fitter = TVirtualFitter::Fitter(0, nparams);
     assert(fitter);
 
-    fitter->SetObjectFit(gHitsSpacepoints);
+    fitter->SetObjectFit(hHitsSpacepoints);
 
     //Set print level
     Double_t arglist[5];
@@ -920,13 +921,12 @@ namespace lar_valrec{
     */
 
     TVirtualFitter * fitter = TVirtualFitter::GetFitter();
-    TGraph2D * hit_spacepoints = (TGraph2D*) fitter->GetObjectFit();
+    TH1D * hit_spacepoints = (TH1D*) fitter->GetObjectFit();
     if(!hit_spacepoints) 
       {
 	std::cout << " *** No hit spacepoints! ***" << std::endl;
 	exit(1);
       }
-
     
     double trackPointX = 0.0;
     double trackPointY = 0.0;
@@ -935,37 +935,18 @@ namespace lar_valrec{
     double trackVectorY = 0.0;
     double trackVectorZ = 0.0;
 
-    /*
-    double trackPointX = 128.047;
-    double trackPointY = 87.3169;
-    double trackPointZ = 46.1124;
-    */
-
-    
     trackPointX = par[0];
     trackPointY = par[1];
     trackPointZ = par[2];
     trackVectorX = par[3];
     trackVectorY = par[4];
     trackVectorZ = par[5];
-    /*
-    trackVectorX = par[0];
-    trackVectorY = par[1];
-    trackVectorZ = par[2];
-    */
+
     const TVector3 trackPoint(trackPointX, trackPointY, trackPointZ);
     const TVector3 trackVector(trackVectorX, trackVectorY, trackVectorZ);
 
-    int npoints = hit_spacepoints->GetN();
+    int npoints = hit_spacepoints->GetNbinsX()/3;
     const int nspacepoints = npoints;
-
-    double *X = new double[nspacepoints];
-    double *Y = new double[nspacepoints];
-    double *Z = new double[nspacepoints];
-
-    X = hit_spacepoints->GetX();
-    Y = hit_spacepoints->GetY();
-    Z = hit_spacepoints->GetZ();
 
     lar_valrec::LArPIDCalculator LArPIDCalc;
 
@@ -973,29 +954,15 @@ namespace lar_valrec{
 
     for(int point=0; point<nspacepoints; point++)
       {
-        const TVector3 spacepoint(X[point], Y[point], Z[point]);
+	double X = hit_spacepoints->GetBinContent(3*point+1);
+        double Y = hit_spacepoints->GetBinContent(3*point+2);
+	double Z = hit_spacepoints->GetBinContent(3*point+3);
+
+        const TVector3 spacepoint(X, Y, Z);
+
         sumSqResidual += LArPIDCalc.CalcDistSqPointLine(spacepoint, trackPoint, trackVector);
-
-	/*
-	std::cout<<"CalcSumSqResidual    "<<X[point]<<"    "<<Y[point]<<"    "<<Z[point]<<"    "<<trackPointX<<"    "<<trackPointY<<"    "<<trackPointZ
-		 <<"    "<<trackVectorX<<"    "<<trackVectorY<<"    "<<trackVectorZ
-		 <<"    "<<LArPIDCalc.CalcDistSqPointLine(spacepoint, trackPoint, trackVector)<<"    "<<sumSqResidual<<std::endl;
-	*/
-
       }
-    /*
-    std::cout<<"CalcSumSqResidual    "
-      //<<X[point]<<"    "<<Y[point]<<"    "<<Z[point]<<"    "
-             <<trackPointX<<"    "<<trackPointY<<"    "<<trackPointZ
-	     <<"    "<<trackVectorX<<"    "<<trackVectorY<<"    "<<trackVectorZ<<"    "<<sumSqResidual<<std::endl;
 
-    std::cout<<std::endl;
-    std::cout<<std::endl;
-    std::cout<<std::endl;
-    std::cout<<std::endl;
-    std::cout<<std::endl;
-    std::cout<<std::endl;
-    */
     f = sumSqResidual;
 
   }
