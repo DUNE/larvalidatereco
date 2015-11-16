@@ -32,6 +32,8 @@ namespace lar_valrec{
 
     TVector3 CalcNearestPointOnLine(const TVector3& point);
 
+    double CalcResRange(const TVector3& point, const TVector3& trackEnd);
+
     double CalcResRangeFraction(const TVector3& point, const TVector3& trackStart, const TVector3& trackEnd);
  
     //int FitTrack(TGraph2D *gHitsSpacepoints);

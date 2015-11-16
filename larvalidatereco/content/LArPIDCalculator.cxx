@@ -57,12 +57,13 @@ namespace lar_valrec{
     const double MoliereRadiusFraction = 0.2;
     const double dEdxTrackFraction = 0.2;
     const double chargeTrackFraction = 0.2;
-    const double coreHaloFraction = 0.2;
+    const double coreHaloFraction = 0.25;
     const double pca_sp_check_threshold = 0.01;
     const int min_spacepoints = 30;
     const double max_dEdx = 50.0;
     const double min_chargecore = 10.0;    
     const double min_dist_from_fitline = 0.01;
+    const double dEdxTrackDist = 5.0;
 
     trackFitMade = false;
 
@@ -280,11 +281,17 @@ namespace lar_valrec{
         double dEdxAmpPenultimate = 0.0;
         double dEdxAmpEnd10 = 0.0;
         double dEdxAmpPenultimate10 = 0.0;
+	double dEdxAmpStartDist = 0.0;
+        double dEdxAmpEndDist = 0.0;
+        double dEdxAmpPenultimateDist = 0.0;
 	double dEdxAreaStart = 0.0;
 	double dEdxAreaEnd = 0.0;
 	double dEdxAreaEnd10 = 0.0;
         double dEdxAreaPenultimate = 0.0;
 	double dEdxAreaPenultimate10 = 0.0;
+	double dEdxAreaStartDist = 0.0;
+        double dEdxAreaEndDist = 0.0;
+        double dEdxAreaPenultimateDist = 0.0;
 
 	double stdDevDist = 0.0;
 
@@ -296,11 +303,18 @@ namespace lar_valrec{
 	int nhits_dEdx_amp_end10 = 0;
         int nhits_dEdx_amp_penultimate = 0;
         int nhits_dEdx_amp_penultimate10 = 0;
+	int nhits_dEdx_amp_start_dist = 0;
+        int nhits_dEdx_amp_end_dist = 0;
+        int nhits_dEdx_amp_penultimate_dist = 0;
         int nhits_dEdx_area_start = 0;
         int nhits_dEdx_area_end = 0;
         int nhits_dEdx_area_end10 = 0;
         int nhits_dEdx_area_penultimate = 0;
 	int nhits_dEdx_area_penultimate10 = 0;
+	int nhits_dEdx_area_start_dist = 0;
+        int nhits_dEdx_area_end_dist = 0;
+        int nhits_dEdx_area_penultimate_dist = 0;
+
 	int nhits_con_start = 0;
         int nhits_con_end = 0;
 
@@ -333,6 +347,7 @@ namespace lar_valrec{
 	      TVector3 spacepoint(hits_spacepoints[0], hits_spacepoints[1], hits_spacepoints[2]);
 
 	      double distSqFromTrackFit = this->CalcDistSqPointLine(spacepoint, fittedTrackPoint, fittedTrackVector);
+	      double resRange = this->CalcResRange(spacepoint, nearestPointEnd);
 	      double resRangeFrac = this->CalcResRangeFraction(spacepoint, nearestPointStart, nearestPointEnd);
 
 	      //geom->WirePitch() is defined at http://nusoft.fnal.gov/larsoft/doxsvn/html.1.7.1/classgeo_1_1Geometry.html
@@ -353,7 +368,7 @@ namespace lar_valrec{
 		  if(CaloAlg.dEdx_AREA(*hit, pitch3D, evHelper.GetEventT0()) < max_dEdx)
                   {
                     nhits_dEdx_area_start++;
-                    dEdxAmpStart += CaloAlg.dEdx_AREA(*hit, pitch3D, evHelper.GetEventT0());
+                    dEdxAreaStart += CaloAlg.dEdx_AREA(*hit, pitch3D, evHelper.GetEventT0());
                   }
 		nhits_con_start++;
   		stdDevStart += distSqFromTrackFit;
@@ -368,7 +383,7 @@ namespace lar_valrec{
 		  if(CaloAlg.dEdx_AREA(*hit, pitch3D, evHelper.GetEventT0()) < max_dEdx)
                   {
                     nhits_dEdx_area_end++;
-                    dEdxAmpEnd += CaloAlg.dEdx_AREA(*hit, pitch3D, evHelper.GetEventT0());
+                    dEdxAreaEnd += CaloAlg.dEdx_AREA(*hit, pitch3D, evHelper.GetEventT0());
                   }
 		nhits_con_end++;
 		stdDevEnd += distSqFromTrackFit;
@@ -383,7 +398,7 @@ namespace lar_valrec{
                   if(CaloAlg.dEdx_AREA(*hit, pitch3D, evHelper.GetEventT0()) < max_dEdx)
 		    {
 		      nhits_dEdx_area_end10++;
-		      dEdxAmpEnd10 += CaloAlg.dEdx_AREA(*hit, pitch3D, evHelper.GetEventT0());
+		      dEdxAreaEnd10 += CaloAlg.dEdx_AREA(*hit, pitch3D, evHelper.GetEventT0());
 		    }
                 }
 	      if(nhits >= min_spacepoints && resRangeFrac > dEdxTrackFraction && resRangeFrac < 2.0 * dEdxTrackFraction)
@@ -396,7 +411,7 @@ namespace lar_valrec{
                   if(CaloAlg.dEdx_AREA(*hit, pitch3D, evHelper.GetEventT0()) < max_dEdx)
 		    {
 		      nhits_dEdx_area_penultimate++;
-		      dEdxAmpPenultimate += CaloAlg.dEdx_AREA(*hit, pitch3D, evHelper.GetEventT0());
+		      dEdxAreaPenultimate += CaloAlg.dEdx_AREA(*hit, pitch3D, evHelper.GetEventT0());
 		    }
                 }
 	      if(nhits >= min_spacepoints && resRangeFrac > 0.1 && resRangeFrac < 0.2)
@@ -409,56 +424,99 @@ namespace lar_valrec{
                   if(CaloAlg.dEdx_AREA(*hit, pitch3D, evHelper.GetEventT0()) < max_dEdx)
                     {
                       nhits_dEdx_area_penultimate10++;
-                      dEdxAmpPenultimate10 += CaloAlg.dEdx_AREA(*hit, pitch3D, evHelper.GetEventT0());
+                      dEdxAreaPenultimate10 += CaloAlg.dEdx_AREA(*hit, pitch3D, evHelper.GetEventT0());
                     }
                 }
+
+
+	      if((nearestPointEnd - nearestPointStart).Mag() > 2.0 * dEdxTrackDist && (nearestPointEnd - nearestPointStart).Mag() - resRange < dEdxTrackDist)
+                {
+                  if(CaloAlg.dEdx_AMP(*hit, pitch3D, evHelper.GetEventT0()) < max_dEdx)
+                    {
+                      nhits_dEdx_amp_start_dist++;
+                      dEdxAmpStartDist += CaloAlg.dEdx_AMP(*hit, pitch3D, evHelper.GetEventT0());
+                    }
+                  if(CaloAlg.dEdx_AREA(*hit, pitch3D, evHelper.GetEventT0()) < max_dEdx)
+                    {
+                      nhits_dEdx_area_start_dist++;
+                      dEdxAreaStartDist += CaloAlg.dEdx_AREA(*hit, pitch3D, evHelper.GetEventT0());
+                    }
+                }
+	      if((nearestPointEnd - nearestPointStart).Mag() > 2.0 * dEdxTrackDist && resRange < dEdxTrackDist)
+                {
+		  if(CaloAlg.dEdx_AMP(*hit, pitch3D, evHelper.GetEventT0()) < max_dEdx)
+                    {
+                      nhits_dEdx_amp_end_dist++;
+                      dEdxAmpEndDist += CaloAlg.dEdx_AMP(*hit, pitch3D, evHelper.GetEventT0());
+                    }
+                  if(CaloAlg.dEdx_AREA(*hit, pitch3D, evHelper.GetEventT0()) < max_dEdx)
+                    {
+                      nhits_dEdx_area_end_dist++;
+                      dEdxAreaEndDist += CaloAlg.dEdx_AREA(*hit, pitch3D, evHelper.GetEventT0());
+                    }
+		}
+	      if((nearestPointEnd - nearestPointStart).Mag() > 2.0 * dEdxTrackDist && resRange > dEdxTrackDist && resRange < 2.0 * dEdxTrackDist)
+                {
+                  if(CaloAlg.dEdx_AMP(*hit, pitch3D, evHelper.GetEventT0()) < max_dEdx)
+                    {
+                      nhits_dEdx_amp_penultimate_dist++;
+                      dEdxAmpPenultimateDist += CaloAlg.dEdx_AMP(*hit, pitch3D, evHelper.GetEventT0());
+                    }
+                  if(CaloAlg.dEdx_AREA(*hit, pitch3D, evHelper.GetEventT0()) < max_dEdx)
+                    {
+                      nhits_dEdx_area_penultimate_dist++;
+		      dEdxAreaPenultimateDist += CaloAlg.dEdx_AREA(*hit, pitch3D, evHelper.GetEventT0());
+                    }
+                }
+
 
 	      stdDevDist += distSqFromTrackFit;
 
 	      if(sqrt(distSqFromTrackFit) < MoliereRadiusFraction * MoliereRadius)
-		chargeCore += (*hit)->PeakAmplitude();
+		chargeCore += (*hit)->Integral();
 	      else
-		chargeHalo += (*hit)->PeakAmplitude();
+		chargeHalo += (*hit)->Integral();
 
 	      //Avoid division by zero by requiring a minimum distance from fit line
-	      chargeCon += (*hit)->PeakAmplitude() / TMath::Max(min_dist_from_fitline, sqrt(distSqFromTrackFit));
+	      chargeCon += (*hit)->Integral() / TMath::Max(min_dist_from_fitline, sqrt(distSqFromTrackFit));
 
 	      if(nhits >= min_spacepoints)
                 {
 		  if(resRangeFrac > (1.0 - coreHaloFraction))
 		    {
 		    if(sqrt(distSqFromTrackFit) < MoliereRadiusFraction * MoliereRadius)
-		      chargeCoreStart += (*hit)->PeakAmplitude();
+		      chargeCoreStart += (*hit)->Integral();
 		    else
-		      chargeHaloStart += (*hit)->PeakAmplitude();
+		      chargeHaloStart += (*hit)->Integral();
 		    }
 
 		  if(resRangeFrac < coreHaloFraction)
 		    {
 		    if(sqrt(distSqFromTrackFit) < MoliereRadiusFraction * MoliereRadius)
-		      chargeCoreEnd += (*hit)->PeakAmplitude();
+		      chargeCoreEnd += (*hit)->Integral();
 		    else
-		      chargeHaloEnd += (*hit)->PeakAmplitude();
+		      chargeHaloEnd += (*hit)->Integral();
 		    }
 
 		  if(resRangeFrac > (1.0 - chargeTrackFraction))
-		    chargeStart += (*hit)->PeakAmplitude();
+		    chargeStart += (*hit)->Integral();
 		  if(resRangeFrac < chargeTrackFraction)
-		    chargeEnd += (*hit)->PeakAmplitude();
+		    chargeEnd += (*hit)->Integral();
                   if(resRangeFrac > 0.5)
-		    chargeFirstHalf += (*hit)->PeakAmplitude();
+		    chargeFirstHalf += (*hit)->Integral();
 		  if(resRangeFrac < 0.5)
-                    chargeSecondHalf += (*hit)->PeakAmplitude();
+                    chargeSecondHalf += (*hit)->Integral();
 
 		  if(resRangeFrac > chargeTrackFraction && resRangeFrac < 2.0 * chargeTrackFraction)
-                    chargePenultimate += (*hit)->PeakAmplitude();
+                    chargePenultimate += (*hit)->Integral();
 
 		  if(resRangeFrac < 0.1)
-                    chargeEnd10 += (*hit)->PeakAmplitude();
+                    chargeEnd10 += (*hit)->Integral();
                   if(resRangeFrac > 0.1 && resRangeFrac < 0.2)
-                    chargePenultimate10 += (*hit)->PeakAmplitude();
+                    chargePenultimate10 += (*hit)->Integral();
 
 		}
+
 	    }
 	  }
 
@@ -468,6 +526,7 @@ namespace lar_valrec{
 	  outputPtr->IsStoppingReco = true;
 	else
 	  outputPtr->IsStoppingReco = false;
+
 
 
 	if(nhits >= min_spacepoints && nhits_dEdx_amp_start >= 1)
@@ -483,17 +542,39 @@ namespace lar_valrec{
 	if(nhits >= min_spacepoints && nhits_dEdx_amp_start >= 1 && nhits_dEdx_amp_end >= 1)
           outputPtr->AvgedEdxAmpLongRatio.push_back((dEdxAmpEnd / nhits_dEdx_amp_end) / (dEdxAmpStart / nhits_dEdx_amp_start));
         else
-          outputPtr->AvgedEdxAmpLongRatio.push_back(0.0);
+          outputPtr->AvgedEdxAmpLongRatio.push_back(1.0);
 
         if(nhits >= min_spacepoints && nhits_dEdx_amp_end >= 1 && nhits_dEdx_amp_penultimate >= 1)
           outputPtr->AvgedEdxAmpEndRatio.push_back((dEdxAmpEnd / nhits_dEdx_amp_end) / (dEdxAmpPenultimate / nhits_dEdx_amp_penultimate));
         else
-          outputPtr->AvgedEdxAmpEndRatio.push_back(0.0);
+          outputPtr->AvgedEdxAmpEndRatio.push_back(1.0);
 
 	if(nhits >= min_spacepoints && nhits_dEdx_amp_end10 >= 1 && nhits_dEdx_amp_penultimate10 >= 1)
           outputPtr->AvgedEdxAmpEndRatio10.push_back((dEdxAmpEnd10 / nhits_dEdx_amp_end10) / (dEdxAmpPenultimate10 / nhits_dEdx_amp_penultimate10));
         else
-          outputPtr->AvgedEdxAmpEndRatio10.push_back(0.0);
+          outputPtr->AvgedEdxAmpEndRatio10.push_back(1.0);
+
+	if((nearestPointEnd - nearestPointStart).Mag() > 2.0 * dEdxTrackDist && nhits_dEdx_amp_start_dist >= 1)
+          outputPtr->AvgedEdxAmpStartDist.push_back(dEdxAmpStartDist / nhits_dEdx_amp_start_dist);
+	else
+          outputPtr->AvgedEdxAmpStartDist.push_back(0.0);
+
+	if((nearestPointEnd - nearestPointStart).Mag() > 2.0 * dEdxTrackDist && nhits_dEdx_amp_end_dist >= 1)
+          outputPtr->AvgedEdxAmpEndDist.push_back(dEdxAmpEndDist / nhits_dEdx_amp_end_dist);
+	else
+          outputPtr->AvgedEdxAmpEndDist.push_back(0.0);
+
+	if((nearestPointEnd - nearestPointStart).Mag() > 2.0 * dEdxTrackDist && nhits_dEdx_amp_start_dist >= 1 && nhits_dEdx_amp_end_dist >= 1)
+          outputPtr->AvgedEdxAmpLongRatioDist.push_back((dEdxAmpEndDist / nhits_dEdx_amp_end_dist) / (dEdxAmpStartDist / nhits_dEdx_amp_start_dist));
+        else
+	  outputPtr->AvgedEdxAmpLongRatioDist.push_back(1.0);
+
+        if((nearestPointEnd - nearestPointStart).Mag() > 2.0 * dEdxTrackDist && nhits_dEdx_amp_end_dist >= 1 && nhits_dEdx_amp_penultimate_dist >= 1)
+          outputPtr->AvgedEdxAmpEndRatioDist.push_back((dEdxAmpEndDist / nhits_dEdx_amp_end_dist) / (dEdxAmpPenultimateDist / nhits_dEdx_amp_penultimate_dist));
+        else
+          outputPtr->AvgedEdxAmpEndRatioDist.push_back(1.0);
+
+
 
 	if(nhits >= min_spacepoints && nhits_dEdx_area_start >= 1)
           outputPtr->AvgedEdxAreaStart.push_back(dEdxAreaStart / nhits_dEdx_area_start);
@@ -508,17 +589,38 @@ namespace lar_valrec{
 	if(nhits >= min_spacepoints && nhits_dEdx_area_start >= 1 && nhits_dEdx_area_end >= 1)
           outputPtr->AvgedEdxAreaLongRatio.push_back((dEdxAreaEnd / nhits_dEdx_area_end) / (dEdxAreaStart / nhits_dEdx_area_start));
         else
-          outputPtr->AvgedEdxAreaLongRatio.push_back(0.0);
+          outputPtr->AvgedEdxAreaLongRatio.push_back(1.0);
 
 	if(nhits >= min_spacepoints && nhits_dEdx_area_end >= 1 && nhits_dEdx_area_penultimate >= 1)
           outputPtr->AvgedEdxAreaEndRatio.push_back((dEdxAreaEnd / nhits_dEdx_area_end) / (dEdxAreaPenultimate / nhits_dEdx_area_penultimate));
         else
-          outputPtr->AvgedEdxAreaEndRatio.push_back(0.0);
+          outputPtr->AvgedEdxAreaEndRatio.push_back(1.0);
 
         if(nhits >= min_spacepoints && nhits_dEdx_area_end10 >= 1 && nhits_dEdx_area_penultimate10 >= 1)
           outputPtr->AvgedEdxAreaEndRatio10.push_back((dEdxAreaEnd10 / nhits_dEdx_area_end10) / (dEdxAreaPenultimate10 / nhits_dEdx_area_penultimate10));
         else
-          outputPtr->AvgedEdxAreaEndRatio10.push_back(0.0);
+          outputPtr->AvgedEdxAreaEndRatio10.push_back(1.0);
+
+	if((nearestPointEnd - nearestPointStart).Mag() > 2.0 * dEdxTrackDist && nhits_dEdx_area_start_dist >= 1)
+          outputPtr->AvgedEdxAreaStartDist.push_back(dEdxAreaStartDist / nhits_dEdx_area_start_dist);
+        else
+          outputPtr->AvgedEdxAreaStartDist.push_back(0.0);
+
+        if((nearestPointEnd - nearestPointStart).Mag() > 2.0 * dEdxTrackDist && nhits_dEdx_area_end_dist >= 1)
+          outputPtr->AvgedEdxAreaEndDist.push_back(dEdxAreaEndDist / nhits_dEdx_area_end_dist);
+        else
+          outputPtr->AvgedEdxAreaEndDist.push_back(0.0);
+
+        if((nearestPointEnd - nearestPointStart).Mag() > 2.0 * dEdxTrackDist && nhits_dEdx_area_start_dist >= 1 && nhits_dEdx_area_end_dist >= 1)
+          outputPtr->AvgedEdxAreaLongRatioDist.push_back((dEdxAreaEndDist / nhits_dEdx_area_end_dist) / (dEdxAreaStartDist / nhits_dEdx_area_start_dist));
+	else
+          outputPtr->AvgedEdxAreaLongRatioDist.push_back(1.0);
+
+        if((nearestPointEnd - nearestPointStart).Mag() > 2.0 * dEdxTrackDist && nhits_dEdx_area_end_dist >= 1 && nhits_dEdx_area_penultimate_dist >= 1)
+          outputPtr->AvgedEdxAreaEndRatioDist.push_back((dEdxAreaEndDist / nhits_dEdx_area_end_dist) / (dEdxAreaPenultimateDist / nhits_dEdx_area_penultimate_dist));
+        else
+          outputPtr->AvgedEdxAreaEndRatioDist.push_back(1.0);
+
 
 
 	if(nhits >= 2)
@@ -631,6 +733,21 @@ namespace lar_valrec{
     return nearestPoint;
   }
 
+  double LArPIDCalculator::CalcResRange(const TVector3& point, const TVector3& trackEnd)
+  {
+    if(!trackFitMade)
+      {
+	std::cerr<<"LArPIDCalculator::CalcResRangeFraction() is called before the fit of the track is made. Please make this call after the track is fitted."<<std::endl;
+        exit(1);
+      }
+
+    //Calculate residual range as a distance; this range is calculated along the line fitted to the track.
+    TVector3 nearestPoint = this->CalcNearestPointOnLine(point);
+    double resRange = (trackEnd - nearestPoint).Mag();
+
+    return resRange;
+  }
+
   double LArPIDCalculator::CalcResRangeFraction(const TVector3& point, const TVector3& trackStart, const TVector3& trackEnd)
   {
     if(!trackFitMade)
@@ -645,8 +762,7 @@ namespace lar_valrec{
 
     return resRangeFraction;
   }
-  
-  //int LArPIDCalculator::FitTrack(TGraph2D *gHitsSpacepoints)
+
   int LArPIDCalculator::FitTrack(TH1D *hHitsSpacepoints)
   {
 
@@ -672,6 +788,8 @@ namespace lar_valrec{
     fitter->SetParameter(2, "TrackPointZ", 75.0, 1.0, activeVolMinZ, activeVolMaxZ);
     fitter->SetParameter(3, "TrackVectorX", 0.0, 0.2, -100.0, 100.0);
     fitter->SetParameter(4, "TrackVectorY", 0.0, 0.2, -100.0, 100.0);
+    //Restrict fitted z direction to positive values. This is a cheating way of resolving the ambiguity in the fitted direction
+    //(there are 2 possible best-fit values of direction which are exactly opposite to each other).
     //fitter->SetParameter(5, "TrackVectorZ", 10.0, 0.2, -100.0, 100.0);
     fitter->SetParameter(5, "TrackVectorZ", 10.0, 0.2, 0.0, 100.0);
 
@@ -685,7 +803,7 @@ namespace lar_valrec{
 
     std::cout<<"MIGRAD fit status = "<<migrad_status<<std::endl;
 
-    if(migrad_status == 4)
+    if(migrad_status != 0)
       {
       std::cout<<"MIGRAD fit failed, calling SIMPLEX...."<<std::endl;
       arglist[1] = 0.1;  //increase tolerance
@@ -874,7 +992,7 @@ namespace lar_valrec{
 	  ++(outputPtr->NHits);
 	  
 	  outputPtr->HitChannel.push_back((*hit)->Channel());
-	  outputPtr->HitCharge.push_back((*hit)->PeakAmplitude());
+	  outputPtr->HitCharge.push_back((*hit)->Integral());
 
 	  if(hitsToTracks.count(*hit)){
 	    outputPtr->HitTrackID.push_back(hitsToTracks.at(*hit)->ID());  
