@@ -1,0 +1,11 @@
+#include "prodsingle_dunefd.fcl"
+
+physics.producers.generator: {
+			     module_type: "SingleFromNuGen"
+			     InputFiles: ["particles.root"]
+			     Particles: [13,-13]
+}
+
+dunefd_services.Geometry: @local::dune10kt_workspace_geo
+dunefd_simulation_services.Geometry: @local::dune10kt_workspace_geo
+services.user.Geometry: @local::dune35t_services.Geometry

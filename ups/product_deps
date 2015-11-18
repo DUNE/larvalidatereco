@@ -35,7 +35,7 @@ product          version
 #larsoft		v04_21_01
 gcc		v4_9_2
 cetbuildtools   v4_09_02       -       only_for_build
-larpandora      v04_05_02
+larpandora      v04_06_00
 #lardata         v04_13_00
 end_product_list
 

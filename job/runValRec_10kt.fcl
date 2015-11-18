@@ -1,0 +1,66 @@
+#include "services_dune.fcl"
+
+process_name: LArValRec
+
+services:
+{
+  # Load the service that manages root files for histograms.
+  TFileService: { fileName: "ntuple.root" }
+  Timing:       {}
+  SimpleMemoryCheck:     { ignoreTotal: 1 } # default is one
+  user:         @local::dunefd_services
+}
+
+dunefd_services.Geometry: @local::dune10kt_workspace_geo
+dunefd_simulation_services.Geometry: @local::dune10kt_workspace_geo
+services.user.Geometry: @local::dunefd_services.Geometry
+
+### Define input file format
+source:
+{
+  module_type: RootInput
+}
+
+### Define output file format
+outputs:
+{
+ out1:
+ {
+   module_type: RootOutput
+   fileName:    "standard_valrec.root" #default file name, can override from command line with -o or --output
+   dataTier:    "full-reconstructed"
+ }
+}
+
+### Define the modules and create chains
+physics:
+{
+  analyzers:{
+	valrec: {
+    		module_type:		LArValidateReco
+    		#Variables: 		[Analysis,Validation,PID]
+    		Variables: 		[Analysis,Validation,PID,Tracking]
+    		TreeName: 		valrec
+    		SimModuleName:		largeant
+    		RecoModuleName: 	pandora
+    		HitModuleName: 		hitfd
+    		StitcherModuleName: 	particlestitcher
+		CaloModuleName:		pandoracalo
+		CaloAmpConstants:        [ 0.9033e-3, 1.0287e-3, 0.8800e-3 ]
+                CaloAreaConstants:       [ 5.1822e-3, 5.2682e-3, 5.3962e-3 ]
+                CalUseModBox:            true
+   	}    				
+  }
+
+  ### Set up a chain of Producer modules
+  reco: [ ]
+
+  ### Set up the output stream
+  stream1: [ valrec ]
+
+  ### Set up the trigger paths (these are the modules that modify the event) 
+  trigger_paths: [ reco ] 
+
+  ### Set up the end paths (these are the modules that do not modify the event)
+  end_paths: [ stream1 ]
+}
